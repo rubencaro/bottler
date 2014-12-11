@@ -12,7 +12,7 @@ including the whole `erts` by now).
 * __ship__: ship your generated `tar.gz` via `scp` to every server you configure.
 * __install__: properly install your shipped release on each of those servers.
 * __restart__: fire a quick restart to apply the newly installed release if you
-are using [Harakiri](http://github.com/admanmedia/harakiri).
+are using [Harakiri](http://github.com/elpulgardelpanda/harakiri).
 
 You should have public key ssh access to all servers you intend to work with.
 Erlang runtime should be installed there too. Everything else, including Elixir
