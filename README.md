@@ -1,4 +1,4 @@
-# Bottler
+# Bottler (BETA)
 
 Bottler is a collection of tools that aims to help you generate releases, ship
 them to your servers, install them there, and get them live on production.
@@ -7,14 +7,16 @@ them to your servers, install them there, and get them live on production.
 
 Four main tools, that can be used separately:
 
-* _release_: It can generate `tar.gz` files with your app and its dependencies (not
+* __release__: generate `tar.gz` files with your app and its dependencies (not
 including the whole `erts` by now).
-* _ship_: It can ship your generated `tar.gz` via `scp` to every server you configure.
-* _install_: It can properly install your shipped release on each of those servers.
-* _restart_: It can fire a quick restart to apply the newly installed release if you are
-using [Harakiri](http://github.com/admanmedia/harakiri).
+* __ship__: ship your generated `tar.gz` via `scp` to every server you configure.
+* __install__: properly install your shipped release on each of those servers.
+* __restart__: fire a quick restart to apply the newly installed release if you
+are using [Harakiri](http://github.com/admanmedia/harakiri).
 
 You should have public key ssh access to all servers you intend to work with.
+Erlang runtime should be installed there too. Everything else, including Elixir
+itself, is included in the release.
 
 By now it's not able to deal with all the how code swap bolts, screws and nuts.
 Maybe someday will be.
@@ -47,6 +49,7 @@ docs for each task with `mix help <task>`.
 
 ## TODOs
 
+* Some minimal testing
 * Get it stable on production
 * Complete README
 * Add to hex
@@ -55,3 +58,4 @@ docs for each task with `mix help <task>`.
 * Use scalable middleplace to ship releases
 * Allow hot code swap?
 * Support for hooks
+* Add tools for docker deploys
