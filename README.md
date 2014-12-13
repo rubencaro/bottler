@@ -54,7 +54,7 @@ docs for each task with `mix help <task>`.
 * Complete README
 * Add to hex
 * Add to travis
-* Optionally include `erts`
+* Optionally include `erts` (now we can ship openssl too see [here](http://www.erlang.org/download/otp_src_17.4.readme))
 * Use scalable middleplace to ship releases
 * Allow hot code swap?
 * Support for hooks
