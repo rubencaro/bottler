@@ -32,14 +32,21 @@ Add to your `deps` like this:
 On your config:
 
 ```elixir
-    config :bottler, :servers, [server1: [public_ip: "123.123.123.123"],
-                                server2: [public_ip: "123.123.123.123"]]
+    config :bottler, :servers, [server1: [user: "myuser", ip: "1.1.1.1"],
+                                server2: [user: "myuser", ip: "1.1.1.2"]]
+
+    config :bottler, :mixfile, Myapp.Mixfile
 ```
 
-Then you can use the tasks like `MIX_ENV=prod mix release`. Take a look at the
+Then you can use the tasks like `mix release`. Take a look at the
 docs for each task with `mix help <task>`.
 
 ## Release
+
+Build a release file. Use like `mix release`.
+
+`prod` environment is used by default. Use like
+`MIX_ENV=other_env mix release` to force it to `other_env`.
 
 ## Ship
 
@@ -47,9 +54,19 @@ docs for each task with `mix help <task>`.
 
 ## Restart
 
+## Deploy
+
+Build a release file, ship it to remote servers, install it, and restart
+the app. No hot code swap for now.
+
+Use like `mix deploy`.
+
+`prod` environment is used by default. Use like
+`MIX_ENV=other_env mix deploy` to force it to `other_env`.
+
 ## TODOs
 
-* Some minimal testing
+* At least some minimal testing
 * Get it stable on production
 * Complete README
 * Add to hex

@@ -4,6 +4,8 @@ defmodule Bottler.Release do
   @moduledoc """
     Code to build a release file. Many small tools working in harmony.
   """
+  @mixfile Application.get_env(:bottler, :mixfile)
+  @app @mixfile.project[:app] |> to_char_list
 
   @doc """
     Build a release tar.gz
@@ -22,13 +24,13 @@ defmodule Bottler.Release do
   end
 
   defp generate_rel_file do
-    write_term "rel/myapp.rel", get_rel_term
+    write_term "rel/#{@app}.rel", get_rel_term
   end
 
   defp generate_tar_file do
     File.cd! "rel", fn() ->
-      :systools.make_script('myapp')
-      :systools.make_tar('myapp')
+      :systools.make_script(@app)
+      :systools.make_tar(@app)
     end
   end
 
@@ -46,9 +48,9 @@ defmodule Bottler.Release do
 
   defp get_rel_term do
     {:release,
-    {'myapp',to_char_list(Myapp.Mixfile.project[:version])},
-    {:erts,'6.2'},
-    get_deps_term}
+      {@app, to_char_list(@mixfile.project[:version])},
+      {:erts, :erlang.system_info(:version)},
+      get_deps_term }
   end
 
   # Get info for every compiled app's from its app file
@@ -73,10 +75,12 @@ defmodule Bottler.Release do
   defp get_all_apps do
     app_files_info = read_all_app_files
 
-    # get compiled and loaded app's versions (and SASL,that maybe not loaded)
+    # get compiled versions
     compiled = for {n,v,_,_} <- app_files_info, do: {n,v}
+    # and loaded app's versions
+    :application.load :sasl # SASL,that may be not loaded
     loaded = for {n,_,v} <- :application.info[:loaded], do: {n,v}
-    versions = Enum.concat([compiled, loaded, [sasl: '2.4.1']]) |> Enum.uniq
+    versions = [compiled, loaded] |> Enum.concat |> Enum.uniq
 
     # a list of all apps with versions
     all = app_files_info |> Enum.reduce([apps: [], iapps: []],
@@ -87,7 +91,7 @@ defmodule Bottler.Release do
                 [apps: apps, iapps: iapps]
               end )
 
-    own_iapps = Myapp.Mixfile.application[:included_applications]
+    own_iapps = @mixfile.application[:included_applications]
                 |> Enum.map(&({&1,&1}))
 
     only_included = all[:iapps]
@@ -95,7 +99,7 @@ defmodule Bottler.Release do
         |> Enum.map(fn(a) -> {a,versions[a]} end)
 
     apps = Enum.concat(all[:apps],[:kernel, :stdlib, :elixir,
-                                    :sasl, :compiler, :syntax_tools])
+                                   :sasl, :compiler, :syntax_tools])
           |> Enum.uniq
           |> Enum.reject(&( own_iapps[&1] ))
           |> Enum.map(fn(a) -> {a,versions[a]} end)

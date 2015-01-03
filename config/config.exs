@@ -12,7 +12,7 @@ use Mix.Config
 #
 config :logger, :console,
   level: :debug,
-  format: "$time $metadata[$level] $message\n"
+  format: "$time $metadata[$level] $message"
 
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment
@@ -21,8 +21,5 @@ config :logger, :console,
 # here (which is why it is important to import them last).
 #
 #     import_config "#{Mix.env}.exs"
-
-config :bottler, :servers, [server1: [public_ip: "123.123.123.123"],
-                             server2:  [public_ip: "123.123.123.123"]]
 
 import_config "#{Mix.env}.exs"

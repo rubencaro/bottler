@@ -3,20 +3,21 @@ require Bottler.Helpers, as: H
 
 defmodule Bottler do
 
+  @servers Application.get_env(:bottler, :servers)
+  @app Application.get_env(:bottler, :mixfile).project[:app]
+
   @moduledoc """
 
   To run:
   ```
-  run_erl -daemon /tmp/myapp/pipes/ /tmp/myapp/log "erl -boot /tmp/myapp/releases/1.0.0+20141130_3930bc3/start -config /tmp/myapp/releases/1.0.0+20141130_3930bc3/sys -env ERL_LIBS /tmp/myapp/lib -sname myapp"
+      run_erl -daemon /tmp/#{@app}/pipes/ /tmp/#{@app}/log "erl -boot /tmp/#{@app}/current/start -config /tmp/#{@app}/current/sys -env ERL_LIBS /tmp/#{@app}/lib -sname #{@app}"
   ```
   To attach:
   ```
-  to_erl /tmp/myapp/pipes/erlang.pipe.1
+      to_erl /tmp/#{@app}/pipes/erlang.pipe.1
   ```
 
   """
-
-  @servers Application.get_env(:bottler, :servers)
 
   @doc """
     Entry point for `mix release` task. Returns `:ok` when done.
@@ -31,7 +32,7 @@ defmodule Bottler do
     L.info "Shipping to #{@servers |> Keyword.keys |> Enum.join(",")}..."
 
     results = @servers |> Keyword.values |> H.in_tasks( fn(args) ->
-            cmd_str = "scp rel/myapp.tar.gz myuser@<%= public_ip %>:/tmp/"
+            cmd_str = "scp rel/#{@app}.tar.gz <%= user %><%= ip %>:/tmp/"
                       |> EEx.eval_string(args) |> to_char_list
             :os.cmd(cmd_str)
           end )
@@ -47,14 +48,20 @@ defmodule Bottler do
   def install, do: Bottler.Install.install(@servers)
 
   @doc """
-    Restart apps on remote servers. Wait until _current_ release is seen on
-    running apps. Returns `:ok` when done.
+    Restart app on remote servers.
+    It merely touches `#{@app}/tmp/restart`, so something like
+    [Harakiri](http://github.com/elpulgardelpanda/harakiri) should be running
+    on server.
+
+    TODO: Wait until _current_ release is seen running.
+
+    Returns `:ok` when done, `{:error, details}` if anything fails.
   """
   def restart do
     L.info "Restarting #{@servers |> Keyword.keys |> Enum.join(",")}..."
 
     results = @servers |> Keyword.values |> H.in_tasks( fn(args) ->
-            cmd_str = "ssh myuser@<%= public_ip %> 'touch myapp/tmp/restart'"
+            cmd_str = "ssh <%= user %>@<%= ip %> 'touch #{@app}/tmp/restart'"
                       |> EEx.eval_string(args) |> to_char_list
             :os.cmd(cmd_str)
           end )
