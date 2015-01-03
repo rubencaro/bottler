@@ -18,7 +18,7 @@ You should have public key ssh access to all servers you intend to work with.
 Erlang runtime should be installed there too. Everything else, including Elixir
 itself, is included in the release.
 
-By now it's not able to deal with all the how code swap bolts, screws and nuts.
+By now it's not able to deal with all the hot code swap bolts, screws and nuts.
 Maybe someday will be.
 
 ## Use
