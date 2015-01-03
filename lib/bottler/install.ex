@@ -19,12 +19,7 @@ defmodule Bottler.Install do
   """
   def install(servers) do
     :ssh.start
-
-    results = servers |> Keyword.values
-              |> H.in_tasks( fn(args) -> on_server(args) end )
-
-    all_ok = Enum.all?(results, &(&1 == :ok))
-    if all_ok, do: :ok, else: {:error, results}
+    servers |> Keyword.values |> H.in_tasks( fn(args) -> on_server(args) end )
   end
 
   defp on_server(args) do

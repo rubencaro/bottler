@@ -3,16 +3,26 @@ require Logger, as: L
 defmodule Bottler.Helpers do
 
   @doc """
-    Run given function in different Tasks.
-    One `Task` for each entry on given list.
-    Each entry on list will be given as args for the function.
+    Run given function in different Tasks. One `Task` for each entry on given
+    list. Each entry on list will be given as args for the function.
+
     Explodes if `timeout` is reached waiting for any particular task to end.
 
-    Returns a list with the results got from each `Task`.
+    Once run, each return value from each task is compared with `expected`.
+    It returns `:ok` if _every_ task returned as expected. If `include_results`
+    is `true`, then returns `{:ok, results}`.
+
+    If any task did not return as expected, then it returns `{:error, results}`.
   """
-  def in_tasks(list, fun, timeout \\ 60_000) do
+  def in_tasks(list, fun, opts) do
+    expected = opts |> Keyword.get(:expected, :ok)
+    timeout = opts |> Keyword.get(:timeout, 60_000)
+    include_results = opts |> Keyword.get(:include_results, false)
+
     tasks = for args <- list, into: [], do: Task.async(fn -> fun.(args) end)
-    for t <- tasks, into: [], do: Task.await(t, timeout)
+    results = for t <- tasks, into: [], do: Task.await(t, timeout)
+    sign = if Enum.all?(results, &(&1 == expected)), do: :ok, else: :error
+    if not include_results and sign == :ok, do: :ok, else: {sign, results}
   end
 
   @doc """

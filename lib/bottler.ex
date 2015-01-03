@@ -31,14 +31,16 @@ defmodule Bottler do
   def ship do
     L.info "Shipping to #{@servers |> Keyword.keys |> Enum.join(",")}..."
 
-    results = @servers |> Keyword.values |> H.in_tasks( fn(args) ->
+    response = @servers |> Keyword.values |> H.in_tasks( fn(args) ->
             cmd_str = "scp rel/#{@app}.tar.gz <%= user %><%= ip %>:/tmp/"
                       |> EEx.eval_string(args) |> to_char_list
             :os.cmd(cmd_str)
-          end )
+          end, expected: [])
 
-    all_ok = Enum.all?(results, &(&1 == []))
-    if all_ok, do: :ok, else: {:error, to_string(results)}
+    case response do
+      {:error, results} -> {:error, to_string(results)}
+      x -> x
+    end
   end
 
   @doc """
@@ -60,14 +62,16 @@ defmodule Bottler do
   def restart do
     L.info "Restarting #{@servers |> Keyword.keys |> Enum.join(",")}..."
 
-    results = @servers |> Keyword.values |> H.in_tasks( fn(args) ->
+    response = @servers |> Keyword.values |> H.in_tasks( fn(args) ->
             cmd_str = "ssh <%= user %>@<%= ip %> 'touch #{@app}/tmp/restart'"
                       |> EEx.eval_string(args) |> to_char_list
             :os.cmd(cmd_str)
-          end )
+          end, expected: [] )
 
-    all_ok = Enum.all?(results, &(&1 == []))
-    if all_ok, do: :ok, else: {:error, to_string(results)}
+    case response do
+      {:error, results} -> {:error, to_string(results)}
+      x -> x
+    end
   end
 
 end
