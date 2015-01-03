@@ -37,7 +37,7 @@ defmodule Bottler do
           end )
 
     all_ok = Enum.all?(results, &(&1 == []))
-    if all_ok, do: :ok, else: {:error, results}
+    if all_ok, do: :ok, else: {:error, to_string(results)}
   end
 
   @doc """
@@ -54,13 +54,13 @@ defmodule Bottler do
     L.info "Restarting #{@servers |> Keyword.keys |> Enum.join(",")}..."
 
     results = @servers |> Keyword.values |> H.in_tasks( fn(args) ->
-            cmd_str = "ssh myuser@<%= public_ip %> 'touch tmp/restart'"
+            cmd_str = "ssh myuser@<%= public_ip %> 'touch myapp/tmp/restart'"
                       |> EEx.eval_string(args) |> to_char_list
             :os.cmd(cmd_str)
           end )
 
     all_ok = Enum.all?(results, &(&1 == []))
-    if all_ok, do: :ok, else: {:error, results}
+    if all_ok, do: :ok, else: {:error, to_string(results)}
   end
 
 end

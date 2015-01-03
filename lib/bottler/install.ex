@@ -44,8 +44,12 @@ defmodule Bottler.Install do
     SSH.cmd! conn, 'mkdir -p /home/myuser/myapp/releases/#{vsn}'
     SSH.cmd! conn, 'mkdir -p /home/myuser/myapp/pipes'
     SSH.cmd! conn, 'mkdir -p /home/myuser/myapp/log'
+    SSH.cmd! conn, 'mkdir -p /home/myuser/myapp/tmp'
     {:ok, _, 0} = SSH.run conn,
           'tar --directory /home/myuser/myapp/releases/#{vsn}/ -xf /tmp/myapp.tar.gz'
+    SSH.cmd! conn, 'ln -sfn /home/myuser/myapp/tmp /home/myuser/myapp/releases/#{vsn}/tmp'
+    SSH.cmd! conn,
+          'ln -sfn /home/myuser/myapp/releases/#{vsn}/releases/#{vsn} /home/myuser/myapp/releases/#{vsn}/boot'
   end
 
   defp make_current(conn, vsn) do
