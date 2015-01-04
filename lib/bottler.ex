@@ -26,26 +26,20 @@ defmodule Bottler do
 
   @doc """
     Copy local release file to remote servers
-    Returns `:ok`, or `{:error, results}`.
+    Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
   """
   def ship do
     L.info "Shipping to #{@servers |> Keyword.keys |> Enum.join(",")}..."
 
-    response = @servers |> Keyword.values |> H.in_tasks( fn(args) ->
-            cmd_str = "scp rel/#{@app}.tar.gz <%= user %><%= ip %>:/tmp/"
-                      |> EEx.eval_string(args) |> to_char_list
-            :os.cmd(cmd_str)
-          end, expected: [])
-
-    case response do
-      {:error, results} -> {:error, to_string(results)}
-      x -> x
-    end
+    @servers |> Keyword.values |> H.in_tasks( fn(args) ->
+        "scp rel/#{@app}.tar.gz <%= user %><%= ip %>:/tmp/"
+            |> EEx.eval_string(args) |> to_char_list |> :os.cmd
+      end, expected: [], inspect_results: true)
   end
 
   @doc """
     Install previously shipped release on remote servers.
-    Returns `:ok` when done.
+    Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
   """
   def install, do: Bottler.Install.install(@servers)
 
@@ -57,21 +51,15 @@ defmodule Bottler do
 
     TODO: Wait until _current_ release is seen running.
 
-    Returns `:ok` when done, `{:error, details}` if anything fails.
+    Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
   """
   def restart do
     L.info "Restarting #{@servers |> Keyword.keys |> Enum.join(",")}..."
 
-    response = @servers |> Keyword.values |> H.in_tasks( fn(args) ->
-            cmd_str = "ssh <%= user %>@<%= ip %> 'touch #{@app}/tmp/restart'"
-                      |> EEx.eval_string(args) |> to_char_list
-            :os.cmd(cmd_str)
-          end, expected: [] )
-
-    case response do
-      {:error, results} -> {:error, to_string(results)}
-      x -> x
-    end
+    @servers |> Keyword.values |> H.in_tasks( fn(args) ->
+        "ssh <%= user %>@<%= ip %> 'touch #{@app}/tmp/restart'"
+          |> EEx.eval_string(args) |> to_char_list |> :os.cmd
+      end, expected: [], inspect_results: true)
   end
 
 end

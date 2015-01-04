@@ -17,10 +17,10 @@ defmodule Mix.Tasks.Deploy do
 
   def run(_args) do
     H.set_prod_environment
-    :ok = B.release
-    :ok = B.ship
-    :ok = B.install
-    :ok = B.restart
+    {:ok, _} = B.release
+    {:ok, _} = B.ship
+    {:ok, _} = B.install
+    {:ok, _} = B.restart
     :ok
   end
 
@@ -39,7 +39,7 @@ defmodule Mix.Tasks.Release do
 
   def run(_args) do
     H.set_prod_environment
-    B.release
+    {:ok, _} = B.release
   end
 
 end

@@ -9,20 +9,26 @@ defmodule Bottler.Helpers do
     Explodes if `timeout` is reached waiting for any particular task to end.
 
     Once run, each return value from each task is compared with `expected`.
-    It returns `:ok` if _every_ task returned as expected. If `include_results`
-    is `true`, then returns `{:ok, results}`.
+    It returns `{:ok, results}` if _every_ task returned as expected.
 
     If any task did not return as expected, then it returns `{:error, results}`.
+
+    If `inspect_results` is `true` then results are inspected before return.
+    This is useful when returned value is a char list and is to be printed to
+    stdout.
   """
   def in_tasks(list, fun, opts) do
     expected = opts |> Keyword.get(:expected, :ok)
     timeout = opts |> Keyword.get(:timeout, 60_000)
-    include_results = opts |> Keyword.get(:include_results, false)
+    inspect_results = opts |> Keyword.get(:inspect_results, false)
 
+    # run and get results
     tasks = for args <- list, into: [], do: Task.async(fn -> fun.(args) end)
     results = for t <- tasks, into: [], do: Task.await(t, timeout)
+
+    # figure out return value
     sign = if Enum.all?(results, &(&1 == expected)), do: :ok, else: :error
-    if not include_results and sign == :ok, do: :ok, else: {sign, results}
+    if inspect_results, do: {sign, results}, else: {sign, inspect(results)}
   end
 
   @doc """
