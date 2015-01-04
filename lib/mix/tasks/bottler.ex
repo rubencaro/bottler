@@ -1,4 +1,5 @@
 require Bottler.Helpers, as: H
+alias Bottler, as: B
 
 defmodule Mix.Tasks.Deploy do
 
@@ -16,10 +17,10 @@ defmodule Mix.Tasks.Deploy do
 
   def run(_args) do
     H.set_prod_environment
-    :ok = Bottler.release
-    :ok = Bottler.ship
-    :ok = Bottler.install
-    :ok = Bottler.restart
+    :ok = B.release
+    :ok = B.ship
+    :ok = B.install
+    :ok = B.restart
     :ok
   end
 
@@ -38,7 +39,7 @@ defmodule Mix.Tasks.Release do
 
   def run(_args) do
     H.set_prod_environment
-    Bottler.release
+    B.release
   end
 
 end
