@@ -48,4 +48,30 @@ defmodule Bottler.Helpers do
     :ok
   end
 
+  @doc """
+    Writes an Elixir/Erlang term to the provided path
+  """
+  def write_term(path, term) do
+    :file.write_file('#{path}', :io_lib.fwrite('~p.\n', [term]))
+  end
+
+  @doc """
+    Reads a file as Erlang terms
+  """
+  def read_terms(path) do
+    result = case '#{path}' |> :file.consult do
+      {:ok, terms} ->
+        {:ok, terms}
+      {:error, {line, type, msg}} ->
+        IO.puts "Unable to parse #{path}: Line #{line}, #{type}, - #{msg}"
+        exit(:normal)
+      {:error, reason} ->
+        IO.puts "Unable to access #{path}: #{reason}"
+        exit(:normal)
+    end
+    result
+  end
+
+
+
 end

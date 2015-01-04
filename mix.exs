@@ -8,6 +8,7 @@ defmodule Bottler.Mixfile do
   end
 
   def application do
-    [ applications: [:logger] ]
+    [ applications: [:logger, :crypto],
+      included_applications: [:ssh, :public_key, :asn1] ]
   end
 end

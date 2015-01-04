@@ -1,4 +1,6 @@
 require Logger, as: L
+require Bottler.Helpers, as: H
+
 defmodule Bottler.Release do
 
   @moduledoc """
@@ -12,8 +14,9 @@ defmodule Bottler.Release do
   """
   def release do
     L.info "Compiling deps for release..."
-    :ok = cmd "MIX_ENV=prod mix deps.get"
-    :ok = cmd "MIX_ENV=prod mix compile"
+    env = System.get_env "MIX_ENV"
+    :ok = cmd "MIX_ENV=#{env} mix deps.get"
+    :ok = cmd "MIX_ENV=#{env} mix compile"
 
     L.info "Generating release tar.gz ..."
     File.mkdir_p! "rel"
@@ -24,7 +27,7 @@ defmodule Bottler.Release do
   end
 
   defp generate_rel_file do
-    write_term "rel/#{@app}.rel", get_rel_term
+    H.write_term "rel/#{@app}.rel", get_rel_term
   end
 
   defp generate_tar_file do
@@ -35,7 +38,7 @@ defmodule Bottler.Release do
   end
 
   defp generate_config_file do
-    write_term "rel/sys.config", Mix.Config.read!("config/config.exs")
+    H.write_term "rel/sys.config", Mix.Config.read!("config/config.exs")
   end
 
   defp get_deps_term do
@@ -60,7 +63,7 @@ defmodule Bottler.Release do
             |> to_string |> String.split
 
     for path <- infos do
-      [{_,name,data}] = path |> read_terms
+      {:ok,[{_,name,data}]} = path |> H.read_terms
       {name, data[:vsn], data[:applications], data[:included_applications]}
     end
   end
@@ -77,7 +80,14 @@ defmodule Bottler.Release do
 
     # get compiled versions
     compiled = for {n,v,_,_} <- app_files_info, do: {n,v}
-    # and loaded app's versions
+
+    # get included applications and load them
+    own_iapps = @mixfile.application
+                |> Keyword.get(:included_applications, [])
+                |> Enum.map(&({&1,&1}))
+    for {a,_} <- own_iapps, do: :application.load(a)
+
+    # get loaded app's versions
     :application.load :sasl # SASL,that may be not loaded
     loaded = for {n,_,v} <- :application.info[:loaded], do: {n,v}
     versions = [compiled, loaded] |> Enum.concat |> Enum.uniq
@@ -90,9 +100,6 @@ defmodule Bottler.Release do
                 iapps = Enum.concat(iapps,ia)
                 [apps: apps, iapps: iapps]
               end )
-
-    own_iapps = @mixfile.application[:included_applications]
-                |> Enum.map(&({&1,&1}))
 
     only_included = all[:iapps]
         |> Enum.reject(&( all[:apps][&1] ))
@@ -113,28 +120,6 @@ defmodule Bottler.Release do
       0 -> :ok
       _ -> {:error, "Release step failed. Please fix any errors and try again."}
     end
-  end
-
-  # Writes an Elixir/Erlang term to the provided path
-  #
-  defp write_term(path, term) do
-    :file.write_file('#{path}', :io_lib.fwrite('~p.\n', [term]))
-  end
-
-  # Reads a file as Erlang terms
-  #
-  defp read_terms(path) do
-    result = case '#{path}' |> :file.consult do
-      {:ok, terms} ->
-        terms
-      {:error, {line, type, msg}} ->
-        IO.puts "Unable to parse #{path}: Line #{line}, #{type}, - #{msg}"
-        exit(:normal)
-      {:error, reason} ->
-        IO.puts "Unable to access #{path}: #{reason}"
-        exit(:normal)
-    end
-    result
   end
 
 end
