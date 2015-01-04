@@ -66,6 +66,7 @@ Use like `mix deploy`.
 
 ## TODOs
 
+* Warn when not properly configured
 * At least some minimal testing
 * Get it stable on production
 * Complete README
