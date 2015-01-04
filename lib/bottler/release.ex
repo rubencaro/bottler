@@ -70,7 +70,7 @@ defmodule Bottler.Release do
 
   # Get compiled, and included apps with versions.
   #
-  # If a included application is not loaded or compiled itself, version
+  # If an included application is not loaded or compiled itself, version
   # number cannot be determined, and it will be ignored. If this is
   # your case, you should explicitly put it into your deps, so it gets
   # compiled, and then detected here.
@@ -84,8 +84,7 @@ defmodule Bottler.Release do
     # get included applications and load them
     own_iapps = @mixfile.application
                 |> Keyword.get(:included_applications, [])
-                |> Enum.map(&({&1,&1}))
-    for {a,_} <- own_iapps, do: :application.load(a)
+    for a <- own_iapps, do: :application.load(a)
 
     # get loaded app's versions
     :application.load :sasl # SASL,that may be not loaded
@@ -108,7 +107,7 @@ defmodule Bottler.Release do
     apps = Enum.concat(all[:apps],[:kernel, :stdlib, :elixir,
                                    :sasl, :compiler, :syntax_tools])
           |> Enum.uniq
-          |> Enum.reject(&( own_iapps[&1] ))
+          |> :erlang.--(own_iapps)
           |> Enum.map(fn(a) -> {a,versions[a]} end)
           |> Enum.reject(fn({_,v}) -> v == nil end) # ignore those with no vsn info
 

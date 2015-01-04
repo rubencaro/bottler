@@ -72,6 +72,11 @@ defmodule Bottler.Helpers do
     result
   end
 
-
+  @doc """
+    Returns a `List` with the results of `ls <folder>`.
+  """
+  def ls(folder) do
+    'ls #{folder}' |> :os.cmd |> to_string |> String.split("\n", trim: true)
+  end
 
 end
