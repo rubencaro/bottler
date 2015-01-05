@@ -46,7 +46,6 @@ defmodule ReleaseTest do
     libs = for lib <- H.ls("rel/extracted/lib"), into: [] do
       lib |> String.split("-") |> List.first
     end
-    ["asn1", "bottler", "compiler", "crypto", "elixir", "kernel", "logger",
-      "public_key", "sasl", "ssh", "stdlib", "syntax_tools"] = libs
+    assert libs == (apps ++ iapps) |> Enum.map(&(to_string(&1))) |> Enum.sort
   end
 end
