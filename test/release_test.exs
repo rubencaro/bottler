@@ -14,10 +14,10 @@ defmodule ReleaseTest do
     :os.cmd 'rm -fr rel'
 
     # generate release
-    :ok = Bottler.Release.release
+    assert :ok = Bottler.Release.release
 
     # check rel term
-    {:ok,[{:release, app, erts, deps}]} = H.read_terms "rel/bottler.rel"
+    assert {:ok,[{:release, app, erts, deps}]} = H.read_terms "rel/bottler.rel"
     assert {'bottler', to_char_list(vsn)} == app
     assert {:erts, :erlang.system_info(:version)} == erts
     for dep <- deps do
@@ -28,24 +28,25 @@ defmodule ReleaseTest do
     end
 
     # check script term
-    {:ok,_} = H.read_terms "rel/bottler.script"
+    assert {:ok,_} = H.read_terms "rel/bottler.script"
 
     # check config term
-    {:ok,[config_term]} = H.read_terms "rel/sys.config"
-    [logger: _, bottler: [servers: _, mixfile: _]] = config_term
+    assert {:ok,[config_term]} = H.read_terms "rel/sys.config"
+    assert [logger: _, bottler: [servers: _, mixfile: _]] = config_term
 
     # check tar.gz exists and extracts
     assert File.regular?("rel/bottler.tar.gz")
     :os.cmd 'mkdir -p rel/extracted'
-    :ok = :erl_tar.extract('rel/bottler.tar.gz',
+    assert :ok = :erl_tar.extract('rel/bottler.tar.gz',
                             [:compressed,{:cwd,'rel/extracted'}])
     # check its contents
-    ["lib","releases"] = H.ls "rel/extracted"
-    [vsn,"bottler.rel"] = H.ls "rel/extracted/releases"
-    ["bottler.rel","start.boot","sys.config"] = H.ls "rel/extracted/releases/#{vsn}"
-    libs = for lib <- H.ls("rel/extracted/lib"), into: [] do
+    assert ["lib","releases"] = File.ls! "rel/extracted"
+    assert [vsn,"bottler.rel"] = File.ls! "rel/extracted/releases"
+    assert ["bottler.rel","start.boot","sys.config"] == File.ls!("rel/extracted/releases/#{vsn}") |> Enum.sort
+    libs = for lib <- File.ls!("rel/extracted/lib"), into: [] do
       lib |> String.split("-") |> List.first
-    end
+    end |> Enum.sort
     assert libs == (apps ++ iapps) |> Enum.map(&(to_string(&1))) |> Enum.sort
+    assert ["watchdog.sh"] = File.ls! "rel/extracted/lib/bottler-#{vsn}/scripts"
   end
 end

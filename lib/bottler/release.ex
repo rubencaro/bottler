@@ -8,6 +8,7 @@ defmodule Bottler.Release do
   """
   @mixfile Application.get_env(:bottler, :mixfile)
   @app @mixfile.project[:app] |> to_char_list
+  @vsn @mixfile.project[:version]
 
   @doc """
     Build a release tar.gz
@@ -19,6 +20,7 @@ defmodule Bottler.Release do
     :ok = cmd "MIX_ENV=#{env} mix compile"
 
     L.info "Generating release tar.gz ..."
+    File.rm_rf! "rel"
     File.mkdir_p! "rel"
     generate_rel_file
     generate_config_file
@@ -26,17 +28,21 @@ defmodule Bottler.Release do
     :ok
   end
 
-  defp generate_rel_file do
-    H.write_term "rel/#{@app}.rel", get_rel_term
-  end
+  defp generate_rel_file, do: H.write_term("rel/#{@app}.rel", get_rel_term)
 
   defp generate_tar_file do
+
+    # add scripts folder
+    {:ok, _} = File.cp_r "lib/scripts", "_build/#{Mix.env}/lib/#{@app}/scripts"
+
     File.cd! "rel", fn() ->
       :systools.make_script(@app)
-      :systools.make_tar(@app)
+      :systools.make_tar(@app,[dirs: [:scripts]])
     end
   end
 
+  # TODO: ensure paths
+  #
   defp generate_config_file do
     H.write_term "rel/sys.config", Mix.Config.read!("config/config.exs")
   end
@@ -59,7 +65,7 @@ defmodule Bottler.Release do
   # Get info for every compiled app's from its app file
   #
   defp read_all_app_files do
-    infos = :os.cmd('find -L _build/prod -name *.app')
+    infos = :os.cmd('find -L _build/#{Mix.env} -name *.app')
             |> to_string |> String.split
 
     for path <- infos do
