@@ -66,7 +66,6 @@ Use like `mix deploy`.
 
 ## TODOs
 
-* Add `scripts` folder to release with generic watchdog scripts.
 * Warn when not properly configured
 * At least some minimal testing
 * Get it stable on production
