@@ -57,8 +57,8 @@ defmodule Bottler.Helpers do
     Returns `:bottler` config keywords. It also validates they are all set.
   """
   def read_and_validate_config do
-    servers = Application.get_env :bottler, :servers |> validate :servers
-    mixfile = Application.get_env :bottler, :mixfile |> validate :mixfile
+    servers = Application.get_env(:bottler, :servers) |> validate :servers
+    mixfile = Application.get_env(:bottler, :mixfile) |> validate :mixfile
     [servers: servers, mixfile: mixfile]
   end
 

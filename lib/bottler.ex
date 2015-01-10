@@ -3,18 +3,15 @@ require Bottler.Helpers, as: H
 
 defmodule Bottler do
 
-  @servers Application.get_env(:bottler, :servers)
-  @app Application.get_env(:bottler, :mixfile).project[:app]
-
   @moduledoc """
 
   To run:
   ```
-      run_erl -daemon /tmp/#{@app}/pipes/ /tmp/#{@app}/log "erl -boot /tmp/#{@app}/current/start -config /tmp/#{@app}/current/sys -env ERL_LIBS /tmp/#{@app}/lib -sname #{@app}"
+      run_erl -daemon /tmp/app/pipes/ /tmp/app/log "erl -boot /tmp/app/current/start -config /tmp/app/current/sys -env ERL_LIBS /tmp/app/lib -sname app"
   ```
   To attach:
   ```
-      to_erl /tmp/#{@app}/pipes/erlang.pipe.1
+      to_erl /tmp/app/pipes/erlang.pipe.1
   ```
 
   """
@@ -22,17 +19,18 @@ defmodule Bottler do
   @doc """
     Entry point for `mix release` task. Returns `:ok` when done.
   """
-  def release, do: Bottler.Release.release
+  def release(config), do: Bottler.Release.release config
 
   @doc """
     Copy local release file to remote servers
     Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
   """
-  def ship do
-    L.info "Shipping to #{@servers |> Keyword.keys |> Enum.join(",")}..."
+  def ship(config) do
+    L.info "Shipping to #{config[:servers] |> Keyword.keys |> Enum.join(",")}..."
 
-    @servers |> Keyword.values |> H.in_tasks( fn(args) ->
-        "scp rel/#{@app}.tar.gz <%= user %><%= ip %>:/tmp/"
+    app = config[:mixfile].project[:app]
+    config[:servers] |> Keyword.values |> H.in_tasks( fn(args) ->
+        "scp rel/#{app}.tar.gz <%= user %><%= ip %>:/tmp/"
             |> EEx.eval_string(args) |> to_char_list |> :os.cmd
       end, expected: [], inspect_results: true)
   end
@@ -41,11 +39,11 @@ defmodule Bottler do
     Install previously shipped release on remote servers.
     Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
   """
-  def install, do: Bottler.Install.install(@servers)
+  def install(config), do: Bottler.Install.install(config[:servers])
 
   @doc """
     Restart app on remote servers.
-    It merely touches `#{@app}/tmp/restart`, so something like
+    It merely touches `app/tmp/restart`, so something like
     [Harakiri](http://github.com/elpulgardelpanda/harakiri) should be running
     on server.
 
@@ -53,11 +51,12 @@ defmodule Bottler do
 
     Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
   """
-  def restart do
-    L.info "Restarting #{@servers |> Keyword.keys |> Enum.join(",")}..."
+  def restart(config) do
+    L.info "Restarting #{config[:servers] |> Keyword.keys |> Enum.join(",")}..."
 
-    @servers |> Keyword.values |> H.in_tasks( fn(args) ->
-        "ssh <%= user %>@<%= ip %> 'touch #{@app}/tmp/restart'"
+    app = config[:mixfile].project[:app]
+    config[:servers] |> Keyword.values |> H.in_tasks( fn(args) ->
+        "ssh <%= user %>@<%= ip %> 'touch #{app}/tmp/restart'"
           |> EEx.eval_string(args) |> to_char_list |> :os.cmd
       end, expected: [], inspect_results: true)
   end

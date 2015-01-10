@@ -6,14 +6,10 @@ defmodule Bottler.Release do
   @moduledoc """
     Code to build a release file. Many small tools working in harmony.
   """
-  @mixfile Application.get_env(:bottler, :mixfile)
-  @app @mixfile.project[:app] |> to_char_list
-  @vsn @mixfile.project[:version]
-
   @doc """
     Build a release tar.gz
   """
-  def release do
+  def release(config) do
     L.info "Compiling deps for release..."
     env = System.get_env "MIX_ENV"
     :ok = cmd "MIX_ENV=#{env} mix deps.get"
@@ -22,22 +18,23 @@ defmodule Bottler.Release do
     L.info "Generating release tar.gz ..."
     File.rm_rf! "rel"
     File.mkdir_p! "rel"
-    generate_rel_file
+    generate_rel_file config[:mixfile]
     generate_config_file
-    generate_tar_file
+    generate_tar_file config[:mixfile]
     :ok
   end
 
-  defp generate_rel_file, do: H.write_term("rel/#{@app}.rel", get_rel_term)
+  defp generate_rel_file(mixf),
+    do: H.write_term("rel/#{mixf.project[:app]}.rel", get_rel_term(mixf))
 
-  defp generate_tar_file do
-
+  defp generate_tar_file(mixf) do
+    app = mixf.project[:app] |> to_char_list
     # add scripts folder
-    {:ok, _} = File.cp_r "lib/scripts", "_build/#{Mix.env}/lib/#{@app}/scripts"
+    {:ok, _} = File.cp_r "lib/scripts", "_build/#{Mix.env}/lib/#{app}/scripts"
 
     File.cd! "rel", fn() ->
-      :systools.make_script(@app)
-      :systools.make_tar(@app,[dirs: [:scripts]])
+      :systools.make_script(app)
+      :systools.make_tar(app,[dirs: [:scripts]])
     end
   end
 
@@ -47,19 +44,22 @@ defmodule Bottler.Release do
     H.write_term "rel/sys.config", Mix.Config.read!("config/config.exs")
   end
 
-  defp get_deps_term do
-    {apps, iapps} = get_all_apps
+  defp get_deps_term(mixf) do
+    {apps, iapps} = get_all_apps mixf
 
     iapps
     |> Enum.map(fn({n,v}) -> {n,v,:load} end)
     |> Enum.concat(apps)
   end
 
-  defp get_rel_term do
+  defp get_rel_term(mixf) do
+    app = mixf.project[:app] |> to_char_list
+    vsn = mixf.project[:version] |> to_char_list
+
     {:release,
-      {@app, to_char_list(@mixfile.project[:version])},
+      {app, vsn},
       {:erts, :erlang.system_info(:version)},
-      get_deps_term }
+      get_deps_term(mixf) }
   end
 
   # Get info for every compiled app's from its app file
@@ -81,14 +81,14 @@ defmodule Bottler.Release do
   # your case, you should explicitly put it into your deps, so it gets
   # compiled, and then detected here.
   #
-  defp get_all_apps do
+  defp get_all_apps(mixf) do
     app_files_info = read_all_app_files
 
     # get compiled versions
     compiled = for {n,v,_,_} <- app_files_info, do: {n,v}
 
     # get included applications and load them
-    own_iapps = @mixfile.application
+    own_iapps = mixf.application
                 |> Keyword.get(:included_applications, [])
     for a <- own_iapps, do: :application.load(a)
 
