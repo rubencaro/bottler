@@ -54,6 +54,35 @@ defmodule Bottler.Helpers do
   end
 
   @doc """
+    Returns `:bottler` config keywords. It also validates they are all set.
+  """
+  def read_and_validate_config do
+    servers = Application.get_env :bottler, :servers |> validate :servers
+    mixfile = Application.get_env :bottler, :mixfile |> validate :mixfile
+    [servers: servers, mixfile: mixfile]
+  end
+
+  # raise if anything looks not ok
+  defp validate(nil, key), do: raise ":bottler '#{key}' is not set on config!"
+
+  defp validate(val, :servers) when is_list(val) do
+    if not is_servers_spec?(val),
+      do: raise ":bottler :servers should look like [srv: [user: '', ip: ''], ... ]"
+    val
+  end
+
+  defp validate(val, :mixfile) when is_atom(val), do: val
+
+  defp validate(val, key),
+    do: raise ":bottler '#{key}' is set to unexpected value: #{val}"
+
+  # validate servers kw format
+  defp is_servers_spec?([{_name,[{:user,_},{:ip,_}]} | rest]),
+    do: is_servers_spec?(rest)
+  defp is_servers_spec?([]), do: true
+  defp is_servers_spec?(_),  do: false
+
+  @doc """
     Writes an Elixir/Erlang term to the provided path
   """
   def write_term(path, term),

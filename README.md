@@ -66,6 +66,7 @@ Use like `mix deploy`.
 
 ## TODOs
 
+* Get config on mix tasks entry point
 * Warn when not properly configured
 * At least some minimal testing
 * Get it stable on production
