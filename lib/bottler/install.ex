@@ -8,10 +8,6 @@ defmodule Bottler.Install do
     Functions to install an already shipped release on remote servers.
   """
 
-  @mixfile Application.get_env(:bottler, :mixfile)
-  @vsn @mixfile.project[:version]
-  @app @mixfile.project[:app] |> to_char_list
-
   @doc """
     Install previously shipped release on remote servers, making it _current_
     release. Actually running release is not touched. Next restart will run
@@ -31,7 +27,7 @@ defmodule Bottler.Install do
     {:ok, conn} = :ssh.connect(ip, 22,
                         [{:user,user},{:silently_accept_hosts,true}], 5000)
 
-    L.info "Installing #{@vsn}..."
+    L.info "Installing #{Mix.Project.get!.project[:version]}..."
 
     place_files conn, user
     make_current conn, user
@@ -43,35 +39,40 @@ defmodule Bottler.Install do
   #
   defp place_files(conn, user) do
     L.info "Settling files..."
-    SSH.cmd! conn, 'mkdir -p /home/#{user}/#{@app}/releases/#{@vsn}'
-    SSH.cmd! conn, 'mkdir -p /home/#{user}/#{@app}/pipes'
-    SSH.cmd! conn, 'mkdir -p /home/#{user}/#{@app}/log'
-    SSH.cmd! conn, 'mkdir -p /home/#{user}/#{@app}/tmp'
+    vsn = Mix.Project.get!.project[:version]
+    app = Mix.Project.get!.project[:app]
+    SSH.cmd! conn, 'mkdir -p /home/#{user}/#{app}/releases/#{vsn}'
+    SSH.cmd! conn, 'mkdir -p /home/#{user}/#{app}/pipes'
+    SSH.cmd! conn, 'mkdir -p /home/#{user}/#{app}/log'
+    SSH.cmd! conn, 'mkdir -p /home/#{user}/#{app}/tmp'
     {:ok, _, 0} = SSH.run conn,
-          'tar --directory /home/#{user}/#{@app}/releases/#{@vsn}/ ' <>
-          '-xf /tmp/#{@app}.tar.gz'
-    SSH.cmd! conn, 'ln -sfn /home/#{user}/#{@app}/tmp ' <>
-                   '/home/#{user}/#{@app}/releases/#{@vsn}/tmp'
+          'tar --directory /home/#{user}/#{app}/releases/#{vsn}/ ' <>
+          '-xf /tmp/#{app}.tar.gz'
+    SSH.cmd! conn, 'ln -sfn /home/#{user}/#{app}/tmp ' <>
+                   '/home/#{user}/#{app}/releases/#{vsn}/tmp'
     SSH.cmd! conn,
-          'ln -sfn /home/#{user}/#{@app}/releases/#{@vsn}/releases/#{@vsn} ' <>
-          '/home/#{user}/#{@app}/releases/#{@vsn}/boot'
+          'ln -sfn /home/#{user}/#{app}/releases/#{vsn}/releases/#{vsn} ' <>
+          '/home/#{user}/#{app}/releases/#{vsn}/boot'
   end
 
   defp make_current(conn, user) do
     L.info "Marking release as current..."
+    app = Mix.Project.get!.project[:app]
+    vsn = Mix.Project.get!.project[:version]
     {:ok, _, 0} = SSH.run conn,
-                            'ln -sfn /home/#{user}/#{@app}/releases/#{@vsn} ' <>
-                            ' /home/#{user}/#{@app}/current'
+                            'ln -sfn /home/#{user}/#{app}/releases/#{vsn} ' <>
+                            ' /home/#{user}/#{app}/current'
   end
 
   defp cleanup_old_releases(conn, user) do
     L.info "Cleaning up old releases..."
-    {:ok, res, 0} = SSH.run conn, 'ls -t /home/#{user}/#{@app}/releases'
+    app = Mix.Project.get!.project[:app]
+    {:ok, res, 0} = SSH.run conn, 'ls -t /home/#{user}/#{app}/releases'
     excess_releases = res |> String.split("\n") |> Enum.slice(5..-2)
 
     for r <- excess_releases do
       L.info "Cleaning up old #{r}..."
-      {:ok, _, 0} = SSH.run conn, 'rm -fr /home/#{user}/#{@app}/releases/#{r}'
+      {:ok, _, 0} = SSH.run conn, 'rm -fr /home/#{user}/#{app}/releases/#{r}'
     end
   end
 

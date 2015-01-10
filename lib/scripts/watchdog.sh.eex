@@ -6,8 +6,8 @@
 # on crontab:
 #    * * * * * /bin/bash -l -c '/path/to/watchdog/watchdog.sh'
 
-app="myapp"
-user="myuser"
+app="<%= app %>"
+user="<%= user %>"
 dir="/home/$user/$app/current"
 log="$dir/log/$app.log"
 

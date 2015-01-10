@@ -55,34 +55,21 @@ defmodule Bottler.Helpers do
 
   @doc """
     Returns `:bottler` config keywords. It also validates they are all set.
+    Raises an error if anything looks wrong.
   """
   def read_and_validate_config do
-    servers = Application.get_env(:bottler, :servers) |> validate :servers
-    mixfile = Application.get_env(:bottler, :mixfile) |> validate :mixfile
-    [servers: servers, mixfile: mixfile]
-  end
+    c = Application.get_env(:bottler, :params)
 
-  # raise if anything looks not ok
-  defp validate(nil, key), do: raise ":bottler '#{key}' is not set on config!"
-
-  defp validate(val, :servers) when is_list(val) do
-    if not is_servers_spec?(val),
+    if not Keyword.keyword?(c[:servers]), do: raise ":bottler :servers should be a keyword list"
+    if not Enum.all?(c[:servers], fn({k,v})-> :ip in Keyword.keys(v) end),
       do: raise ":bottler :servers should look like \n" <>
-                "    [srvname: [user: '', ip: ''], ... ]\n" <>
-                "but was\n    #{inspect val}"
-    val
+                "    [srvname: [ip: '' | rest ] | rest ]\n" <>
+                "but was\n    #{inspect c[:servers]}"
+
+    if not is_binary(c[:remote_user]), do: raise ":bottler :remote_user should be a binary"
+
+    c
   end
-
-  defp validate(val, :mixfile) when is_atom(val), do: val
-
-  defp validate(val, key),
-    do: raise ":bottler '#{key}' is set to unexpected value: #{val}"
-
-  # validate servers kw format
-  defp is_servers_spec?([{_name,[{:user,_},{:ip,_}]} | rest]),
-    do: is_servers_spec?(rest)
-  defp is_servers_spec?([]), do: true
-  defp is_servers_spec?(_),  do: false
 
   @doc """
     Writes an Elixir/Erlang term to the provided path

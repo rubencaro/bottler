@@ -9,7 +9,7 @@ defmodule Bottler.Release do
   @doc """
     Build a release tar.gz
   """
-  def release(config) do
+  def release do
     L.info "Compiling deps for release..."
     env = System.get_env "MIX_ENV"
     :ok = cmd "MIX_ENV=#{env} mix deps.get"
@@ -18,24 +18,43 @@ defmodule Bottler.Release do
     L.info "Generating release tar.gz ..."
     File.rm_rf! "rel"
     File.mkdir_p! "rel"
-    generate_rel_file config[:mixfile]
+    generate_rel_file
     generate_config_file
-    generate_tar_file config[:mixfile]
+    generate_tar_file
     :ok
   end
 
-  defp generate_rel_file(mixf),
-    do: H.write_term("rel/#{mixf.project[:app]}.rel", get_rel_term(mixf))
+  defp generate_rel_file,
+    do: H.write_term("rel/#{Mix.Project.get!.project[:app]}.rel", get_rel_term)
 
-  defp generate_tar_file(mixf) do
-    app = mixf.project[:app] |> to_char_list
+  defp generate_tar_file do
+    app = Mix.Project.get!.project[:app] |> to_char_list
     # add scripts folder
-    {:ok, _} = File.cp_r "lib/scripts", "_build/#{Mix.env}/lib/#{app}/scripts"
+
+    {:ok, _} = File.cp_r "lib/scripts", "#{Mix.Project.app_path}/scripts"
 
     File.cd! "rel", fn() ->
-      :systools.make_script(app,[path: ['../_build/#{Mix.env}/lib/*/ebin']])
-      :systools.make_tar(app,[dirs: [:scripts], path: ['../_build/#{Mix.env}/lib/*/ebin']])
+      :systools.make_script(app,[path: ['#{Mix.Project.build_path}/lib/*/ebin']])
+      :systools.make_tar(app,[dirs: [:scripts], path: ['#{Mix.Project.build_path}/lib/*/ebin']])
     end
+  end
+
+  # process templates found on scripts folder
+  #
+  def process_scripts_folder do
+    vars = [app: Mix.Project.get!.project[:app], ]
+
+    templates = get_scripts_path |> File.ls!
+                |> Enum.filter(&( String.match?(&1,~r/\.eex$/) ))
+
+    scripts = for t <- templates, do: { t, EEx.eval_file(t,vars) }
+  end
+
+  # return project's scripts folder if it exists, bottler's otherwise
+  #
+  def get_scripts_path do
+    p = "lib/scripts"
+    if File.is_dir?(p), do: p, else: Path.expand("#{__DIR__}/../scripts")
   end
 
   # TODO: ensure paths
@@ -44,22 +63,23 @@ defmodule Bottler.Release do
     H.write_term "rel/sys.config", Mix.Config.read!("config/config.exs")
   end
 
-  defp get_deps_term(mixf) do
-    {apps, iapps} = get_all_apps mixf
+  defp get_deps_term do
+    {apps, iapps} = get_all_apps
 
     iapps
     |> Enum.map(fn({n,v}) -> {n,v,:load} end)
     |> Enum.concat(apps)
   end
 
-  defp get_rel_term(mixf) do
+  defp get_rel_term do
+    mixf = Mix.Project.get!
     app = mixf.project[:app] |> to_char_list
     vsn = mixf.project[:version] |> to_char_list
 
     {:release,
       {app, vsn},
       {:erts, :erlang.system_info(:version)},
-      get_deps_term(mixf) }
+      get_deps_term }
   end
 
   # Get info for every compiled app's from its app file
@@ -81,14 +101,14 @@ defmodule Bottler.Release do
   # your case, you should explicitly put it into your deps, so it gets
   # compiled, and then detected here.
   #
-  defp get_all_apps(mixf) do
+  defp get_all_apps do
     app_files_info = read_all_app_files
 
     # get compiled versions
     compiled = for {n,v,_,_} <- app_files_info, do: {n,v}
 
     # get included applications and load them
-    own_iapps = mixf.application
+    own_iapps = Mix.Project.get!.application
                 |> Keyword.get(:included_applications, [])
     for a <- own_iapps, do: :application.load(a)
 
