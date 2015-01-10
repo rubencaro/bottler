@@ -33,8 +33,8 @@ defmodule Bottler.Release do
     {:ok, _} = File.cp_r "lib/scripts", "_build/#{Mix.env}/lib/#{app}/scripts"
 
     File.cd! "rel", fn() ->
-      :systools.make_script(app)
-      :systools.make_tar(app,[dirs: [:scripts]])
+      :systools.make_script(app,[path: ['../_build/#{Mix.env}/lib/*/ebin']])
+      :systools.make_tar(app,[dirs: [:scripts], path: ['../_build/#{Mix.env}/lib/*/ebin']])
     end
   end
 

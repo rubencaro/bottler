@@ -66,8 +66,11 @@ Use like `mix deploy`.
 
 ## TODOs
 
+* Include own iex app
+* Use default scripts if none given
 * At least some minimal testing
 * Get it stable on production
+* Individual tasks for each step
 * Complete README
 * Add to hex
 * Add to travis
