@@ -67,7 +67,9 @@ defmodule Bottler.Helpers do
 
   defp validate(val, :servers) when is_list(val) do
     if not is_servers_spec?(val),
-      do: raise ":bottler :servers should look like [srv: [user: '', ip: ''], ... ]"
+      do: raise ":bottler :servers should look like \n" <>
+                "    [srvname: [user: '', ip: ''], ... ]\n" <>
+                "but was\n    #{inspect val}"
     val
   end
 
