@@ -41,13 +41,15 @@ defmodule Bottler.Release do
 
   # process templates found on scripts folder
   #
-  def process_scripts_folder do
-    vars = [app: Mix.Project.get!.project[:app], ]
+  def process_scripts_folder(config) do
+    vars = [app: Mix.Project.get!.project[:app], user: config[:remote_user]]
 
     templates = get_scripts_path |> File.ls!
                 |> Enum.filter(&( String.match?(&1,~r/\.eex$/) ))
 
     scripts = for t <- templates, do: { t, EEx.eval_file(t,vars) }
+
+    # TODO: place final scripts on the right folder
   end
 
   # return project's scripts folder if it exists, bottler's otherwise
