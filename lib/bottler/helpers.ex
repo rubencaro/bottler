@@ -48,7 +48,7 @@ defmodule Bottler.Helpers do
 
     # destroy other environments' traces
     {:ok, _} = File.rm_rf("_build")
-    
+
     :ok
   end
 
@@ -59,7 +59,10 @@ defmodule Bottler.Helpers do
   def read_and_validate_config do
     c = Application.get_env(:bottler, :params)
 
-    if not Keyword.keyword?(c[:servers]), do: raise ":bottler :servers should be a keyword list"
+    L.debug inspect(c)
+
+    if not Keyword.keyword?(c[:servers]),
+      do: raise ":bottler :servers should be a keyword list, it was #{inspect c[:servers]}"
     if not Enum.all?(c[:servers], fn({_,v})-> :ip in Keyword.keys(v) end),
       do: raise ":bottler :servers should look like \n" <>
                 "    [srvname: [ip: '' | rest ] | rest ]\n" <>
