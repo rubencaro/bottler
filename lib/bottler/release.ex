@@ -9,55 +9,74 @@ defmodule Bottler.Release do
   @doc """
     Build a release tar.gz
   """
-  def release do
+  def release(config) do
     L.info "Compiling deps for release..."
     env = System.get_env "MIX_ENV"
     :ok = cmd "MIX_ENV=#{env} mix deps.get"
-    :ok = cmd "MIX_ENV=#{env} mix compile"
+    :ok = cmd "MIX_ENV=#{env} mix compile --force"
 
     L.info "Generating release tar.gz ..."
     File.rm_rf! "rel"
     File.mkdir_p! "rel"
     generate_rel_file
     generate_config_file
-    generate_tar_file
+    generate_tar_file config
     :ok
   end
 
   defp generate_rel_file,
     do: H.write_term("rel/#{Mix.Project.get!.project[:app]}.rel", get_rel_term)
 
-  defp generate_tar_file do
+  defp generate_tar_file(config) do
     app = Mix.Project.get!.project[:app] |> to_char_list
+
     # add scripts folder
+    process_scripts_folder config
 
-    {:ok, _} = File.cp_r "lib/scripts", "#{Mix.Project.app_path}/scripts"
-
+    ebin_path = '#{Mix.Project.build_path}/lib/*/ebin'
     File.cd! "rel", fn() ->
-      :systools.make_script(app,[path: ['#{Mix.Project.build_path}/lib/*/ebin']])
-      :systools.make_tar(app,[dirs: [:scripts], path: ['#{Mix.Project.build_path}/lib/*/ebin']])
+      :systools.make_script(app,[path: [ebin_path]])
+      :systools.make_tar(app,[dirs: [:scripts], path: [ebin_path]])
     end
   end
 
   # process templates found on scripts folder
   #
   def process_scripts_folder(config) do
-    vars = [app: Mix.Project.get!.project[:app], user: config[:remote_user]]
+    vars = [app: Mix.Project.get!.project[:app],
+            user: config[:remote_user]]
+    dest_path = "#{Mix.Project.app_path}/scripts"
+    File.mkdir_p! dest_path
 
-    templates = get_scripts_path |> File.ls!
-                |> Enum.filter(&( String.match?(&1,~r/\.eex$/) ))
+    # render script templates
+    scripts = get_all_scripts
+    renders = scripts
+              |> Enum.filter(fn({_,v})-> String.match?(v,~r/\.eex$/) end)
+              |> Enum.map(fn({k,v})-> { k, EEx.eval_file(v,vars) } end)
 
-    scripts = for t <- templates, do: { t, EEx.eval_file(t,vars) }
-
-    # TODO: place final scripts on the right folder
+    # copy scripts
+    for {f,v} <- scripts, do: :ok = File.cp v, "#{dest_path}/#{f}"
+    # save renders over them
+    for {f,body} <- renders,
+      do: :ok = File.write "#{dest_path}/#{f}", body, [:write]
   end
 
-  # return project's scripts folder if it exists, bottler's otherwise
+  # Return all script files' names and full paths. Merging bottler's scripts
+  # folder with project's scripts folder if it exists.
   #
-  def get_scripts_path do
-    p = "lib/scripts"
-    if File.is_dir?(p), do: p, else: Path.expand("#{__DIR__}/../scripts")
+  # Project's scripts overwrite bottler's with the same name,
+  # ignoring the extra `.eex` part (i.e. `shell.sh` from bottler would be
+  # replaced with `shell.sh.eex` from the project ).
+  #
+  def get_all_scripts do
+    pfiles = full_ls "lib/scripts"
+    bfiles = full_ls "#{__DIR__}/../scripts"
+    for f <- (bfiles ++ pfiles), into: %{}, do: {Path.basename(f,".eex"), f}
   end
+
+  # ls with full paths
+  defp full_ls(path), do:
+    path |> File.ls! |> Enum.map(&( "#{Path.expand(path)}/#{&1}" ))
 
   # TODO: ensure paths
   #

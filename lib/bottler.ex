@@ -19,7 +19,7 @@ defmodule Bottler do
   @doc """
     Entry point for `mix release` task. Returns `:ok` when done.
   """
-  def release, do: Bottler.Release.release 
+  def release(config), do: Bottler.Release.release config
 
   @doc """
     Copy local release file to remote servers

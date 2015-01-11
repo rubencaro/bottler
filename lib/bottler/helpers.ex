@@ -47,9 +47,8 @@ defmodule Bottler.Helpers do
     end
 
     # destroy other environments' traces
-    for p <- File.ls!("_build"), p != to_string(Mix.env),
-      do: {:ok, _} = File.rm_rf("_build/#{p}")
-
+    {:ok, _} = File.rm_rf("_build")
+    
     :ok
   end
 
@@ -61,7 +60,7 @@ defmodule Bottler.Helpers do
     c = Application.get_env(:bottler, :params)
 
     if not Keyword.keyword?(c[:servers]), do: raise ":bottler :servers should be a keyword list"
-    if not Enum.all?(c[:servers], fn({k,v})-> :ip in Keyword.keys(v) end),
+    if not Enum.all?(c[:servers], fn({_,v})-> :ip in Keyword.keys(v) end),
       do: raise ":bottler :servers should look like \n" <>
                 "    [srvname: [ip: '' | rest ] | rest ]\n" <>
                 "but was\n    #{inspect c[:servers]}"
