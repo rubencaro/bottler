@@ -38,6 +38,8 @@ defmodule Bottler.Helpers do
     If `MIX_ENV` was already set, then it's not overwritten.
   """
   def set_prod_environment do
+    use Mix.Config
+
     if System.get_env("MIX_ENV") do
       L.info "MIX_ENV was already set, not forcing..."
     else
@@ -45,6 +47,8 @@ defmodule Bottler.Helpers do
       System.put_env "MIX_ENV","prod"
       Mix.env :prod
     end
+
+    :ok = Mix.Config.persist Mix.Config.import_config "../../config/config.exs"
 
     # destroy other environments' traces
     {:ok, _} = File.rm_rf("_build")

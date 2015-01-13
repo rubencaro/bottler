@@ -32,10 +32,9 @@ Add to your `deps` like this:
 On your config:
 
 ```elixir
-    config :bottler, :servers, [server1: [user: "myuser", ip: "1.1.1.1"],
-                                server2: [user: "myuser", ip: "1.1.1.2"]]
-
-    config :bottler, :mixfile, Myapp.Mixfile
+    config :bottler, :params, [servers: [server1: [ip: "1.1.1.1"],
+                                         server2: [ip: "1.1.1.2"]],
+                               remote_user: "produser" ]
 ```
 
 Then you can use the tasks like `mix release`. Take a look at the
