@@ -65,7 +65,6 @@ Use like `mix deploy`.
 
 ## TODOs
 
-* Fix loading the production config by default
 * Include own iex app
 * At least some minimal testing
 * Get it stable on production
