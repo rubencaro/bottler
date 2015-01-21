@@ -48,7 +48,8 @@ defmodule Bottler.Helpers do
       Mix.env :prod
     end
 
-    :ok = Mix.Config.persist Mix.Config.import_config "../../config/config.exs"
+    :ok = "config/config.exs" |> Path.absname
+          |>  Mix.Config.import_config |> Mix.Config.persist
 
     # destroy other environments' traces
     {:ok, _} = File.rm_rf("_build")
