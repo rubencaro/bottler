@@ -138,10 +138,10 @@ defmodule Bottler.Release do
     # get included applications and load them
     own_iapps = Mix.Project.get!.application
                 |> Keyword.get(:included_applications, [])
-    for a <- own_iapps, do: :application.load(a)
+    for a <- own_iapps, do: :ok = load(a)
 
     # get loaded app's versions
-    :application.load :sasl # SASL,that may be not loaded
+    :ok = load :sasl # SASL,that may be not loaded
     loaded = for {n,_,v} <- :application.info[:loaded], do: {n,v}
     versions = [compiled, loaded] |> Enum.concat |> Enum.uniq
 
@@ -177,6 +177,13 @@ defmodule Bottler.Release do
     case Mix.Shell.cmd(command, &(IO.write(&1)) ) do
       0 -> :ok
       _ -> {:error, "Release step failed. Please fix any errors and try again."}
+    end
+  end
+
+  defp load(app) do
+    case :application.load app do
+      {:error, {:already_loaded, ^app}} -> :ok
+      x -> x
     end
   end
 
