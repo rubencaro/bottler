@@ -132,21 +132,9 @@ defmodule Bottler.Release do
   defp get_all_apps do
     app_files_info = read_all_app_files
 
-    # get compiled versions
-    compiled = for {n,v,_,_} <- app_files_info, do: {n,v}
-
-    # get included applications and load them
-    own_iapps = Mix.Project.get!.application
-                |> Keyword.get(:included_applications, [])
-    for a <- own_iapps, do: :ok = load(a)
-
-    # get loaded app's versions
-    :ok = load :sasl # SASL,that may be not loaded
-    loaded = for {n,_,v} <- :application.info[:loaded], do: {n,v}
-    versions = [compiled, loaded] |> Enum.concat |> Enum.uniq
-
-    # a list of all apps with versions
-    all = app_files_info |> Enum.reduce([apps: [], iapps: []],
+    # a list of all apps ever needed or included
+    needed = [:kernel, :stdlib, :elixir, :sasl, :compiler, :syntax_tools]
+    all = app_files_info |> Enum.reduce([apps: needed, iapps: []],
               fn({n,_,a,ia},[apps: apps, iapps: iapps]) ->
                 if ia == nil, do: ia = []
                 apps = Enum.concat([apps,[n],a,ia])
@@ -154,15 +142,26 @@ defmodule Bottler.Release do
                 [apps: apps, iapps: iapps]
               end )
 
-    only_included = all[:iapps]
-        |> Enum.reject(&( all[:apps][&1] ))
-        |> add_version_info(versions)
+    # load all of them, see what version they are on
+    for a <- ( all[:apps] ++ all[:iapps] ), do: :ok = load(a)
 
-    apps = Enum.concat(all[:apps],[:kernel, :stdlib, :elixir,
-                                   :sasl, :compiler, :syntax_tools])
-          |> Enum.uniq
-          |> :erlang.--(own_iapps)
-          |> add_version_info(versions)
+    # get own included applications
+    own_iapps = Mix.Project.get!.application
+                |> Keyword.get(:included_applications, [])
+
+    # get loaded app's versions
+    versions = for {n,_,v} <- :application.info[:loaded], do: {n,v}
+
+    only_included = all[:iapps]
+        |> Enum.reject(&( &1 in all[:apps] ))
+        |> :erlang.++(own_iapps) # own included are only included
+        |> Enum.map(fn(a) -> {a,versions[a]} end)
+        |> Enum.reject(fn({_,v}) -> v == nil end) # ignore those with no vsn info
+
+    apps = all[:apps] |> Enum.uniq
+          |> :erlang.--(own_iapps) # do not start own included
+          |> Enum.map(fn(a) -> {a,versions[a]} end)
+          |> Enum.reject(fn({_,v}) -> v == nil end) # ignore those with no vsn info
 
     {apps, only_included}
   end
