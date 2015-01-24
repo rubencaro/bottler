@@ -98,6 +98,7 @@ defmodule Bottler.Helpers do
       %{file: file, line: line} -> "\n\n#{file}:#{line}"
       _ -> ""
     end
-    "#{loc}\n\n#{inspect obj}\n\n" |> L.debug
+    [ :bright, :red, "#{loc}", :normal, "\n\n#{inspect obj}\n\n", :reset]
+    |> IO.ANSI.format(true) |> Logger.info
   end
 end
