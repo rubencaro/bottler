@@ -28,9 +28,10 @@ defmodule Bottler do
   def ship(config) do
     L.info "Shipping to #{config[:servers] |> Keyword.keys |> Enum.join(",")}..."
 
-    app = config[:mixfile].project[:app]
+    app = Mix.Project.get!.project[:app]
     config[:servers] |> Keyword.values |> H.in_tasks( fn(args) ->
-        "scp rel/#{app}.tar.gz <%= user %><%= ip %>:/tmp/"
+        args = args ++ [remote_user: config[:remote_user]]
+        "scp rel/#{app}.tar.gz <%= remote_user %>@<%= ip %>:/tmp/"
             |> EEx.eval_string(args) |> to_char_list |> :os.cmd
       end, expected: [], inspect_results: true)
   end
@@ -54,9 +55,10 @@ defmodule Bottler do
   def restart(config) do
     L.info "Restarting #{config[:servers] |> Keyword.keys |> Enum.join(",")}..."
 
-    app = config[:mixfile].project[:app]
+    app = Mix.Project.get!.project[:app]
     config[:servers] |> Keyword.values |> H.in_tasks( fn(args) ->
-        "ssh <%= user %>@<%= ip %> 'touch #{app}/tmp/restart'"
+        args = args ++ [remote_user: config[:remote_user]]
+        "ssh <%= remote_user %>@<%= ip %> 'touch #{app}/tmp/restart'"
           |> EEx.eval_string(args) |> to_char_list |> :os.cmd
       end, expected: [], inspect_results: true)
   end
