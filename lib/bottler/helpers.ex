@@ -89,4 +89,15 @@ defmodule Bottler.Helpers do
   """
   def read_terms(path), do: :file.consult('#{path}')
 
+  @doc """
+    Spit to logger any passed variable, with location information if `caller`
+    (such as `__ENV__`) is given.
+  """
+  def spit(obj, caller \\ nil) do
+    loc = case caller do
+      %{file: file, line: line} -> "\n\n#{file}:#{line}"
+      _ -> ""
+    end
+    "#{loc}\n\n#{inspect obj}\n\n" |> L.debug
+  end
 end
