@@ -181,6 +181,8 @@ defmodule Bottler.Release do
   end
 
   defp load(app) do
+    # if it's a custom compiled app, ensure that's the one that gets loaded
+    :code.add_patha('#{Mix.Project.build_path}/lib/#{app}/ebin')
     case :application.load app do
       {:error, {:already_loaded, ^app}} -> :ok
       x -> x
