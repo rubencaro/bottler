@@ -75,8 +75,15 @@ defmodule Bottler.Release do
   end
 
   # ls with full paths
-  defp full_ls(path), do:
-    path |> File.ls! |> Enum.map(&( "#{Path.expand(path)}/#{&1}" ))
+  # Return empty list if anything fails
+  #
+  defp full_ls(path) do
+    expanded = Path.expand(path)
+    case path |> File.ls do
+      {:ok, list} -> Enum.map(list,&( "#{expanded}/#{&1}" ))
+      _ -> []
+    end
+  end
 
   # TODO: ensure paths
   #
