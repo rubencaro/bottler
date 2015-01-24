@@ -93,12 +93,12 @@ defmodule Bottler.Helpers do
     Spit to logger any passed variable, with location information if `caller`
     (such as `__ENV__`) is given.
   """
-  def spit(obj, caller \\ nil) do
+  def spit(obj, caller \\ nil, inspect_opts \\ []) do
     loc = case caller do
       %{file: file, line: line} -> "\n\n#{file}:#{line}"
       _ -> ""
     end
-    [ :bright, :red, "#{loc}", :normal, "\n\n#{inspect obj}\n\n", :reset]
+    [ :bright, :red, "#{loc}", :normal, "\n\n#{inspect(obj,inspect_opts)}\n\n", :reset]
     |> IO.ANSI.format(true) |> Logger.info
   end
 end
