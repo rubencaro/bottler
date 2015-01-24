@@ -24,10 +24,10 @@ defmodule Bottler.Install do
     ip = args[:ip] |> to_char_list
     user = args[:user] |> to_char_list
 
+    L.info "Installing #{Mix.Project.get!.project[:version]} on #{ip}..."
+
     {:ok, conn} = :ssh.connect(ip, 22,
                         [{:user,user},{:silently_accept_hosts,true}], 5000)
-
-    L.info "Installing #{Mix.Project.get!.project[:version]}..."
 
     place_files conn, user
     make_current conn, user
