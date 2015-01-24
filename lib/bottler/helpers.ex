@@ -17,7 +17,7 @@ defmodule Bottler.Helpers do
     This is useful when returned value is a char list and is to be printed to
     stdout.
   """
-  def in_tasks(list, fun, opts) do
+  def in_tasks(list, fun, opts \\ []) do
     expected = opts |> Keyword.get(:expected, :ok)
     timeout = opts |> Keyword.get(:timeout, 60_000)
     inspect_results = opts |> Keyword.get(:inspect_results, false)
