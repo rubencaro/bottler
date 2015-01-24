@@ -156,16 +156,21 @@ defmodule Bottler.Release do
 
     only_included = all[:iapps]
         |> Enum.reject(&( all[:apps][&1] ))
-        |> Enum.map(fn(a) -> {a,versions[a]} end)
+        |> add_version_info(versions)
 
     apps = Enum.concat(all[:apps],[:kernel, :stdlib, :elixir,
                                    :sasl, :compiler, :syntax_tools])
           |> Enum.uniq
           |> :erlang.--(own_iapps)
-          |> Enum.map(fn(a) -> {a,versions[a]} end)
-          |> Enum.reject(fn({_,v}) -> v == nil end) # ignore those with no vsn info
+          |> add_version_info(versions)
 
     {apps, only_included}
+  end
+
+  defp add_version_info(apps,versions) do
+    apps
+    |> Enum.map(fn(a) -> {a,versions[a]} end)
+    |> Enum.reject(fn({_,v}) -> v == nil end) # ignore those with no vsn info
   end
 
   defp cmd(command) do
