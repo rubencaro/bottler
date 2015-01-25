@@ -51,8 +51,11 @@ defmodule Bottler.Helpers do
     :ok = "config/config.exs" |> Path.absname
           |>  Mix.Config.import_config |> Mix.Config.persist
 
-    # destroy other environments' traces
-    {:ok, _} = File.rm_rf("_build")
+    # destroy other environments' traces, helpful for environment debugging
+    # {:ok, _} = File.rm_rf("_build")
+
+    # support dynamic config, force project's compilation
+    [] = :os.cmd 'touch config/config.exs'
 
     :ok
   end
@@ -100,5 +103,15 @@ defmodule Bottler.Helpers do
     end
     [ :bright, :red, "#{loc}", :normal, "\n\n#{inspect(obj,inspect_opts)}\n\n", :reset]
     |> IO.ANSI.format(true) |> Logger.info
+  end
+
+  @doc """
+    Run given command through `Mix.Shell`
+  """
+  def cmd(command) do
+    case Mix.Shell.cmd(command, &(IO.write(&1)) ) do
+      0 -> :ok
+      _ -> {:error, "Release step failed. Please fix any errors and try again."}
+    end
   end
 end

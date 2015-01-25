@@ -12,8 +12,8 @@ defmodule Bottler.Release do
   def release(config) do
     L.info "Compiling deps for release..."
     env = System.get_env "MIX_ENV"
-    :ok = cmd "MIX_ENV=#{env} mix deps.get"
-    :ok = cmd "MIX_ENV=#{env} mix compile --force"
+    :ok = H.cmd "MIX_ENV=#{env} mix deps.get"
+    :ok = H.cmd "MIX_ENV=#{env} mix compile"
 
     L.info "Generating release tar.gz ..."
     File.rm_rf! "rel"
@@ -168,13 +168,6 @@ defmodule Bottler.Release do
     apps
     |> Enum.map(fn(a) -> {a,versions[a]} end)
     |> Enum.reject(fn({_,v}) -> v == nil end) # ignore those with no vsn info
-  end
-
-  defp cmd(command) do
-    case Mix.Shell.cmd(command, &(IO.write(&1)) ) do
-      0 -> :ok
-      _ -> {:error, "Release step failed. Please fix any errors and try again."}
-    end
   end
 
   defp load(app) do
