@@ -48,12 +48,12 @@ defmodule Bottler.Install do
     SSH.cmd! conn, 'mkdir -p /home/#{user}/#{app}/log'
     SSH.cmd! conn, 'mkdir -p /home/#{user}/#{app}/tmp'
     {:ok, _, 0} = SSH.run conn,
-          'tar --directory /home/#{user}/#{app}/releases/#{vsn}/ ' <>
+          'tar --directory /home/#{user}/#{app}/releases/#{vsn}/ ' ++
           '-xf /tmp/#{app}.tar.gz'
-    SSH.cmd! conn, 'ln -sfn /home/#{user}/#{app}/tmp ' <>
+    SSH.cmd! conn, 'ln -sfn /home/#{user}/#{app}/tmp ' ++
                    '/home/#{user}/#{app}/releases/#{vsn}/tmp'
     SSH.cmd! conn,
-          'ln -sfn /home/#{user}/#{app}/releases/#{vsn}/releases/#{vsn} ' <>
+          'ln -sfn /home/#{user}/#{app}/releases/#{vsn}/releases/#{vsn} ' ++
           '/home/#{user}/#{app}/releases/#{vsn}/boot'
   end
 
@@ -62,7 +62,7 @@ defmodule Bottler.Install do
     app = Mix.Project.get!.project[:app]
     vsn = Mix.Project.get!.project[:version]
     {:ok, _, 0} = SSH.run conn,
-                            'ln -sfn /home/#{user}/#{app}/releases/#{vsn} ' <>
+                            'ln -sfn /home/#{user}/#{app}/releases/#{vsn} ' ++
                             ' /home/#{user}/#{app}/current'
   end
 
