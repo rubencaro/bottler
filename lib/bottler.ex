@@ -40,7 +40,7 @@ defmodule Bottler do
     Install previously shipped release on remote servers.
     Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
   """
-  def install(config), do: Bottler.Install.install(config[:servers])
+  def install(config), do: Bottler.Install.install(config)
 
   @doc """
     Restart app on remote servers.
