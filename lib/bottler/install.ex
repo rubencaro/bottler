@@ -31,16 +31,16 @@ defmodule Bottler.Install do
     {:ok, conn} = :ssh.connect(ip, 22,
                         [{:user,user},{:silently_accept_hosts,true}], 5000)
 
-    place_files conn, user
-    make_current conn, user
-    cleanup_old_releases conn, user
+    place_files conn, user, ip
+    make_current conn, user, ip
+    cleanup_old_releases conn, user, ip
     :ok
   end
 
   # Decompress release file, put it in place, and make needed movements
   #
-  defp place_files(conn, user) do
-    L.info "Settling files..."
+  defp place_files(conn, user, ip) do
+    L.info "Settling files on #{ip}..."
     vsn = Mix.Project.get!.project[:version]
     app = Mix.Project.get!.project[:app]
     SSH.cmd! conn, 'mkdir -p /home/#{user}/#{app}/releases/#{vsn}'
@@ -57,8 +57,8 @@ defmodule Bottler.Install do
           '/home/#{user}/#{app}/releases/#{vsn}/boot'
   end
 
-  defp make_current(conn, user) do
-    L.info "Marking release as current..."
+  defp make_current(conn, user, ip) do
+    L.info "Marking release as current on #{ip}..."
     app = Mix.Project.get!.project[:app]
     vsn = Mix.Project.get!.project[:version]
     {:ok, _, 0} = SSH.run conn,
@@ -66,8 +66,8 @@ defmodule Bottler.Install do
                             ' /home/#{user}/#{app}/current'
   end
 
-  defp cleanup_old_releases(conn, user) do
-    L.info "Cleaning up old releases..."
+  defp cleanup_old_releases(conn, user, ip) do
+    L.info "Cleaning up old releases on #{ip}..."
     app = Mix.Project.get!.project[:app]
     {:ok, res, 0} = SSH.run conn, 'ls -t /home/#{user}/#{app}/releases'
     excess_releases = res |> String.split("\n") |> Enum.slice(5..-2)
