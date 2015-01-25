@@ -1,5 +1,4 @@
 require Bottler.Helpers, as: H
-require Logger, as: L
 
 defmodule ReleaseTest do
   use ExUnit.Case, async: false

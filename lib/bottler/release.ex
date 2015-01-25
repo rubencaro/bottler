@@ -155,13 +155,11 @@ defmodule Bottler.Release do
     only_included = all[:iapps]
         |> Enum.reject(&( &1 in all[:apps] ))
         |> :erlang.++(own_iapps) # own included are only included
-        |> Enum.map(fn(a) -> {a,versions[a]} end)
-        |> Enum.reject(fn({_,v}) -> v == nil end) # ignore those with no vsn info
+        |> add_version_info(versions)
 
     apps = all[:apps] |> Enum.uniq
           |> :erlang.--(own_iapps) # do not start own included
-          |> Enum.map(fn(a) -> {a,versions[a]} end)
-          |> Enum.reject(fn({_,v}) -> v == nil end) # ignore those with no vsn info
+          |> add_version_info(versions)
 
     {apps, only_included}
   end
