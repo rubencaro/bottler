@@ -17,12 +17,11 @@ mtime=$(ls -l --time-style=+%s $alive | awk '{print $6}')
 let "last = $(date +%s) - 60"
 [ -f $alive ] && [ $mtime -gt $last ] && exit
 
-erlopts="-boot $dir/boot/start -config $dir/boot/sys -env ERL_LIBS $dir/lib"
-cmd="iex --erl \"$erlopts\" --name $app@localhost --detached"
+# start in a detached erlang VM
+cmd="erl -boot $dir/boot/start -config $dir/boot/sys -env ERL_LIBS $dir/lib"
+cmd="$cmd -name $app@localhost -detached"
 
-echo "Running: $cmd" >> $log
+echo "$(date) Running: $cmd" >> $log
 
 $cmd 2>&1 >> $log
 
-# To connect (interactive elixir):
-#         iex --remsh "$app@localhost" --sname connector
