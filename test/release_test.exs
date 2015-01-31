@@ -39,8 +39,8 @@ defmodule ReleaseTest do
     assert :ok = :erl_tar.extract('rel/bottler.tar.gz',
                             [:compressed,{:cwd,'rel/extracted'}])
     # check its contents
-    assert ["lib","releases"] = File.ls! "rel/extracted"
-    assert [vsn,"bottler.rel"] = File.ls! "rel/extracted/releases"
+    assert ["lib","releases"] == File.ls!("rel/extracted") |> Enum.sort
+    assert ([vsn,"bottler.rel"] |> Enum.sort) == File.ls!("rel/extracted/releases") |> Enum.sort
     assert ["bottler.rel","start.boot","sys.config"] == File.ls!("rel/extracted/releases/#{vsn}") |> Enum.sort
     libs = for lib <- File.ls!("rel/extracted/lib"), into: [] do
       lib |> String.split("-") |> List.first

@@ -43,18 +43,22 @@ defmodule Bottler.Install do
     L.info "Settling files on #{ip}..."
     vsn = Mix.Project.get!.project[:version]
     app = Mix.Project.get!.project[:app]
-    SSH.cmd! conn, 'mkdir -p /home/#{user}/#{app}/releases/#{vsn}'
-    SSH.cmd! conn, 'mkdir -p /home/#{user}/#{app}/pipes'
-    SSH.cmd! conn, 'mkdir -p /home/#{user}/#{app}/log'
-    SSH.cmd! conn, 'mkdir -p /home/#{user}/#{app}/tmp'
+    path = '/home/#{user}/#{app}/'
+    SSH.cmd! conn, 'mkdir -p #{path}releases/#{vsn}'
+    SSH.cmd! conn, 'mkdir -p #{path}pipes'
+    SSH.cmd! conn, 'mkdir -p #{path}log'
+    SSH.cmd! conn, 'mkdir -p #{path}tmp'
     {:ok, _, 0} = SSH.run conn,
-          'tar --directory /home/#{user}/#{app}/releases/#{vsn}/ ' ++
-          '-xf /tmp/#{app}.tar.gz'
-    SSH.cmd! conn, 'ln -sfn /home/#{user}/#{app}/tmp ' ++
-                   '/home/#{user}/#{app}/releases/#{vsn}/tmp'
+        'tar --directory #{path}releases/#{vsn}/ ' ++
+        '-xf /tmp/#{app}.tar.gz'
+    SSH.cmd! conn, 'ln -sfn #{path}tmp ' ++
+                   '#{path}releases/#{vsn}/tmp'
     SSH.cmd! conn,
-          'ln -sfn /home/#{user}/#{app}/releases/#{vsn}/releases/#{vsn} ' ++
-          '/home/#{user}/#{app}/releases/#{vsn}/boot'
+        'ln -sfn #{path}releases/#{vsn}/releases/#{vsn} ' ++
+        '#{path}releases/#{vsn}/boot'
+    SSH.cmd! conn,
+        'ln -sfn #{path}releases/#{vsn}/lib/#{app}-#{vsn}/scripts ' ++
+        '#{path}releases/#{vsn}/scripts'
   end
 
   defp make_current(conn, user, ip) do
