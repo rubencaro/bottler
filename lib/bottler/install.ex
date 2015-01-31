@@ -53,6 +53,8 @@ defmodule Bottler.Install do
         '-xf /tmp/#{app}.tar.gz'
     SSH.cmd! conn, 'ln -sfn #{path}tmp ' ++
                    '#{path}releases/#{vsn}/tmp'
+    SSH.cmd! conn, 'ln -sfn #{path}log ' ++
+                   '#{path}releases/#{vsn}/log'
     SSH.cmd! conn,
         'ln -sfn #{path}releases/#{vsn}/releases/#{vsn} ' ++
         '#{path}releases/#{vsn}/boot'
