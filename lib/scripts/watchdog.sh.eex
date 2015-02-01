@@ -21,13 +21,13 @@ if [ -f $alive ]; then
 fi
 touch $alive # ensure existence
 
-# start in a detached erlang VM
+# start in an erlang VM
 cmd="erl -boot $dir/boot/start -config $dir/boot/sys -env ERL_LIBS $dir/lib"
-cmd="$cmd -name $app@localhost -detached"
+cmd="$cmd -name $app@localhost -noshell"
 
 echo "$(date) Running: $cmd" >> $log
 
-$cmd 2>&1 >> $log
+$cmd 2>&1 >> $log &
 
 ########################################
 #
