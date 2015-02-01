@@ -63,22 +63,37 @@ defmodule Bottler.SSH do
 
   # Loop until all data is received. Return read data and the exit_status.
   #
-  defp get_response(channel, timeout, data \\ "", status \\ nil) do
-    receive do
-      {:ssh_cm, _, response} -> parse_response(response, channel, timeout, data, status)
-    after
-      timeout -> { :error, :taimaut }
+  defp get_response(channel, timeout, data \\ "", status \\ nil, closed \\ false) do
+
+    # if we got status and closed, then we are done
+    parsed = case {status, closed} do
+      {st, true} when not is_nil(st) -> {:ok, data, status}
+      _ -> receive_and_parse_response(channel, timeout, data, status, closed)
+    end
+
+    # tail recursion
+    case parsed do
+      {:loop, {channel, timeout, data, status, closed}} -> # loop again, still things missing
+        get_response(channel, timeout, data, status, closed)
+      x -> x
     end
   end
 
   # Parse ugly response
-  defp parse_response(response, channel, timeout, data, status) do
+  defp receive_and_parse_response(channel, timeout, data, status, closed) do
+    response = receive do
+      {:ssh_cm, _, res} -> res
+    after
+      timeout -> { :error, :taimaut }
+    end
+
     case response do
-      {:data, ^channel, _, new_data} -> get_response(channel, timeout, data <> new_data)
-      {:eof, ^channel} -> get_response(channel, timeout, data, status)
-      {:exit_signal, ^channel, _, _} -> get_response(channel, timeout, data, status)
-      {:exit_status, ^channel, status} -> get_response(channel, timeout, data, status)
-      {:closed, ^channel} -> { :ok, data, status }
+      {:data, ^channel, _, new_data} -> {:loop, {channel, timeout, data <> new_data, status, closed}}
+      {:eof, ^channel} -> {:loop, {channel, timeout, data, status, closed}}
+      {:exit_signal, ^channel, _, _} -> {:loop, {channel, timeout, data, status, closed}}
+      {:exit_status, ^channel, new_status} -> {:loop, {channel, timeout, data, new_status, closed}}
+      {:closed, ^channel} -> {:loop, {channel, timeout, data, status, true}}
+      x -> x
     end
   end
 
