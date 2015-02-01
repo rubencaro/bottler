@@ -10,12 +10,16 @@ app="<%= app %>"
 user="<%= user %>"
 dir="/home/$user/$app/current"
 log="$dir/log/$app.log"
+touch $log # ensure existence
 
 # test proof of life
 alive="$dir/tmp/alive"
-mtime=$(ls -l --time-style=+%s $alive | awk '{print $6}')
-let "last = $(date +%s) - 60"
-[ -f $alive ] && [ $mtime -gt $last ] && exit
+if [ -f $alive ]; then
+  mtime=$(ls -l --time-style=+%s $alive | awk '{print $6}')
+  let "last = $(date +%s) - 60"
+  [ $mtime -gt $last ] && exit
+fi
+touch $alive # ensure existence
 
 # start in a detached erlang VM
 cmd="erl -boot $dir/boot/start -config $dir/boot/sys -env ERL_LIBS $dir/lib"
@@ -25,3 +29,73 @@ echo "$(date) Running: $cmd" >> $log
 
 $cmd 2>&1 >> $log
 
+########################################
+#
+#     Some ways to run your app:
+#
+#     To run (embedded erlang):
+#     ```
+#         run_erl -daemon /home/$user/$app/pipes/ /home/$user/$app/log
+#           "erl -boot $dir/boot/start
+#                -config $dir/boot/sys
+#                -env ERL_LIBS $dir/lib
+#                -sname $app"
+#     ```
+#
+#     To connect (embedded erlang):
+#     ```
+#         to_erl /home/$user/$app/pipes/erlang.pipe.1
+#     ```
+#
+#     To run (interactive erlang):
+#     ```
+#         erl -boot $dir/boot/start
+#             -config $dir/boot/sys
+#             -env ERL_LIBS $dir/lib
+#             -name $app@localhost
+#     ```
+#
+#     To run (interactive elixir, using app's own `iex`):
+#     ```
+#         erl -boot $dir/boot/start
+#             -config $dir/boot/sys
+#             -env ERL_LIBS $dir/lib
+#             -name $app@localhost
+#             -noshell -user Elixir.IEx.CLI -extra --no-halt
+#     ```
+#
+#     To run (detached elixir):
+#     ```
+#         iex --erl "-boot $dir/boot/start
+#                    -config $dir/boot/sys
+#                    -env ERL_LIBS $dir/lib"
+#             --name $app@localhost
+#             --detached
+#     ```
+#
+#     To run (detached erlang):
+#     ```
+#         erl -boot $dir/boot/start
+#             -config $dir/boot/sys
+#             -env ERL_LIBS $dir/lib
+#             -name $app@localhost
+#             -detached
+#     ```
+#
+#     To connect (interactive elixir):
+#     ```
+#         iex --remsh $app@localhost --sname connector
+#     ```
+#
+#     To connect (interactive erlang):
+#     ```
+#         erl -remsh $app@localhost -sname connector
+#     ```
+#
+#     To connect (interactive elixir, using app's own `iex`):
+#     ```
+#         erl -remsh $app@localhost -sname connector
+#         # and then ...
+#         ($app@localhost)1> 'Elixir.IEx':start().
+#     ```
+#
