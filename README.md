@@ -1,6 +1,7 @@
 # Bottler (BETA)
 
 [![Build Status](https://travis-ci.org/elpulgardelpanda/bottler.svg?branch=master)](https://travis-ci.org/elpulgardelpanda/bottler)
+[![Hex Version](http://img.shields.io/hexpm/v/bottler.svg?style=flat)](https://hex.pm/packages/bottler)
 
 Bottler is a collection of tools that aims to help you generate releases, ship
 them to your servers, install them there, and get them live on production.
