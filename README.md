@@ -74,7 +74,6 @@ Use like `mix deploy`.
 * Add fast rollback (to any of previous versions)
 * Complete README
 * Add to hex
-* Add to travis
 * Optionally include `erts` (now we can ship openssl too see [here](http://www.erlang.org/download/otp_src_17.4.readme))
 * Use scalable middleplace to ship releases
 * Allow hot code swap?
