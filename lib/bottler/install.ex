@@ -45,7 +45,6 @@ defmodule Bottler.Install do
     app = Mix.Project.get!.project[:app]
     path = '/home/#{user}/#{app}/'
     SSH.cmd! conn, 'mkdir -p #{path}releases/#{vsn}'
-    SSH.cmd! conn, 'mkdir -p #{path}pipes'
     SSH.cmd! conn, 'mkdir -p #{path}log'
     SSH.cmd! conn, 'mkdir -p #{path}tmp'
     {:ok, _, 0} = SSH.run conn,
