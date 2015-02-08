@@ -69,7 +69,6 @@ Use like `mix deploy`.
 ## TODOs
 
 * At least some minimal testing
-* Add connect script
 * Get it stable on production
 * Individual tasks for each step
 * Add fast rollback (to any of previous versions)
@@ -79,3 +78,13 @@ Use like `mix deploy`.
 * Allow hot code swap?
 * Support for hooks
 * Add tools for docker deploys
+
+## Changelog
+
+### 0.3.0
+
+* Add connect script
+
+### 0.2.0
+
+* First package released

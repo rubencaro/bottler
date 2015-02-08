@@ -46,6 +46,6 @@ defmodule ReleaseTest do
       lib |> String.split("-") |> List.first
     end |> Enum.sort
     assert libs == (apps ++ iapps) |> Enum.map(&(to_string(&1))) |> Enum.sort
-    assert ["watchdog.sh"] = File.ls! "rel/extracted/lib/bottler-#{vsn}/scripts"
+    assert ["connect.sh","watchdog.sh"] = File.ls!("rel/extracted/lib/bottler-#{vsn}/scripts") |> Enum.sort
   end
 end

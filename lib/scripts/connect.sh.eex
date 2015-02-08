@@ -8,17 +8,10 @@
 # and ensure networks are visible.
 
 app="<%= app %>"
-user="<%= user %>"
-dir="/home/$user/$app/current"
-log="$dir/log/$app.log"
-touch $log # ensure existence
 
 # connect with interactive erlang
 cmd="erl -remsh $app@localhost -sname connector"
-
-echo "$(date) Running: $cmd" >> $log
-
-$cmd 2>&1 >> $log &
+$cmd
 
 ########################################
 #
