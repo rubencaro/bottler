@@ -28,7 +28,8 @@ defmodule Bottler.Helpers do
 
     # figure out return value
     sign = if Enum.all?(results, &(&1 == expected)), do: :ok, else: :error
-    if inspect_results, do: {sign, results}, else: {sign, inspect(results)}
+    if inspect_results, do: {sign, results},
+        else: {sign, to_string(inspect(results))}
   end
 
   @doc """

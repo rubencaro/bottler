@@ -68,10 +68,11 @@ Use like `mix deploy`.
 
 ## TODOs
 
-* At least some minimal testing
+* Add more testing
 * Get it stable on production
-* Individual tasks for each step
 * Add fast rollback (to any of previous versions)
+* Options to filter target servers from command line
+* Wait until _current_ release is seen running.
 * Complete README
 * Optionally include `erts` (now we can ship openssl too see [here](http://www.erlang.org/download/otp_src_17.4.readme))
 * Use scalable middleplace to ship releases
@@ -83,6 +84,7 @@ Use like `mix deploy`.
 
 ### 0.3.0
 
+* Individual tasks for each step
 * Add connect script
 
 ### 0.2.0

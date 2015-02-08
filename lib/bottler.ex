@@ -48,19 +48,18 @@ defmodule Bottler do
     [Harakiri](http://github.com/elpulgardelpanda/harakiri) should be running
     on server.
 
-    TODO: Wait until _current_ release is seen running.
-
     Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
   """
   def restart(config) do
     L.info "Restarting #{config[:servers] |> Keyword.keys |> Enum.join(",")}..."
 
     app = Mix.Project.get!.project[:app]
-    config[:servers] |> Keyword.values |> H.in_tasks( fn(args) ->
+    {sign, results} = config[:servers] |> Keyword.values |> H.in_tasks( fn(args) ->
         args = args ++ [remote_user: config[:remote_user]]
         "ssh <%= remote_user %>@<%= ip %> 'touch #{app}/tmp/restart'"
           |> EEx.eval_string(args) |> to_char_list |> :os.cmd
       end, expected: [], inspect_results: true)
+    {sign, results}
   end
 
 end
