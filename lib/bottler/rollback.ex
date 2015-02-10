@@ -2,6 +2,7 @@ require Logger, as: L
 require Bottler.Helpers, as: H
 
 defmodule Bottler.Rollback do
+  alias Bottler.SSH
 
   @moduledoc """
     Simply move the _current_ link to the previous release and restart to
