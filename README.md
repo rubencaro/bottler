@@ -94,8 +94,8 @@ Use like `mix deploy`.
 ## Rollback
 
 Simply move the _current_ link to the previous release and restart to
-apply. It's quite faster than to deploy a previous release, that is
-also possible.
+apply. It's also possible to deploy a previous release, but this is
+quite faster.
 
 Be careful because the _previous release_ may be different on each server.
 It's up to you to keep all your servers rollback-able (yeah).
@@ -112,6 +112,7 @@ Use like `mix bottler.rollback`.
 * Options to filter target servers from command line
 * Wait until _current_ release is seen running.
 * Complete README
+* Rollback to any previous version
 * Optionally include `erts` (now we can ship openssl too see [here](http://www.erlang.org/download/otp_src_17.4.readme))
 * Use scalable middleplace to ship releases
 * Allow hot code swap?
@@ -124,7 +125,7 @@ Use like `mix bottler.rollback`.
 
 * Individual tasks for each step
 * Add connect script
-* Add fast rollback (to any of previous versions)
+* Add fast rollback
 
 ### 0.2.0
 

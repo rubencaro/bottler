@@ -5,8 +5,8 @@ defmodule Bottler.Rollback do
 
   @moduledoc """
     Simply move the _current_ link to the previous release and restart to
-    apply. It's quite faster than to deploy a previous release, that is
-    also possible.
+    apply. It's also possible to deploy a previous release, but this is
+    quite faster.
 
     Be careful because the _previous release_ may be different on each server.
     It's up to you to keep all your servers rollback-able (yeah).
