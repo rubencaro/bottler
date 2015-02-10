@@ -7,7 +7,7 @@ defmodule Bottler.Release do
     Code to build a release file. Many small tools working in harmony.
   """
   @doc """
-    Build a release tar.gz
+    Build a release tar.gz. Returns `:ok` when done. Crash otherwise.
   """
   def release(config) do
     L.info "Compiling deps for release..."

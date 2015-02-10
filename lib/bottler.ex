@@ -1,23 +1,12 @@
-require Logger, as: L
-require Bottler.Helpers, as: H
 
 defmodule Bottler do
 
   @moduledoc """
-
-  To run:
-  ```
-      run_erl -daemon /tmp/app/pipes/ /tmp/app/log "erl -boot /tmp/app/current/start -config /tmp/app/current/sys -env ERL_LIBS /tmp/app/lib -sname app"
-  ```
-  To attach:
-  ```
-      to_erl /tmp/app/pipes/erlang.pipe.1
-  ```
-
+    Main Bottler module. Exposes entry points for each individual task.
   """
 
   @doc """
-    Entry point for `mix release` task. Returns `:ok` when done.
+    Build a release tar.gz. Returns `:ok` when done. Crash otherwise.
   """
   def release(config), do: Bottler.Release.release config
 
@@ -25,16 +14,7 @@ defmodule Bottler do
     Copy local release file to remote servers
     Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
   """
-  def ship(config) do
-    L.info "Shipping to #{config[:servers] |> Keyword.keys |> Enum.join(",")}..."
-
-    app = Mix.Project.get!.project[:app]
-    config[:servers] |> Keyword.values |> H.in_tasks( fn(args) ->
-        args = args ++ [remote_user: config[:remote_user]]
-        "scp rel/#{app}.tar.gz <%= remote_user %>@<%= ip %>:/tmp/"
-            |> EEx.eval_string(args) |> to_char_list |> :os.cmd
-      end, expected: [], to_s: true)
-  end
+  def ship(config), do: Bottler.Ship.ship config
 
   @doc """
     Install previously shipped release on remote servers.
@@ -50,15 +30,6 @@ defmodule Bottler do
 
     Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
   """
-  def restart(config) do
-    L.info "Restarting #{config[:servers] |> Keyword.keys |> Enum.join(",")}..."
-
-    app = Mix.Project.get!.project[:app]
-    config[:servers] |> Keyword.values |> H.in_tasks( fn(args) ->
-        args = args ++ [remote_user: config[:remote_user]]
-        "ssh <%= remote_user %>@<%= ip %> 'touch #{app}/tmp/restart'"
-          |> EEx.eval_string(args) |> to_char_list |> :os.cmd
-      end, expected: [], to_s: true)
-  end
+  def restart(config), do: Bottler.Restart.restart(config)
 
 end

@@ -40,12 +40,16 @@ defmodule ReleaseTest do
                             [:compressed,{:cwd,'rel/extracted'}])
     # check its contents
     assert ["lib","releases"] == File.ls!("rel/extracted") |> Enum.sort
+    # releases
     assert ([vsn,"bottler.rel"] |> Enum.sort) == File.ls!("rel/extracted/releases") |> Enum.sort
+    # release folder
     assert ["bottler.rel","start.boot","sys.config"] == File.ls!("rel/extracted/releases/#{vsn}") |> Enum.sort
+    # libs included
     libs = for lib <- File.ls!("rel/extracted/lib"), into: [] do
       lib |> String.split("-") |> List.first
     end |> Enum.sort
     assert libs == (apps ++ iapps) |> Enum.map(&(to_string(&1))) |> Enum.sort
+    # scripts too
     assert ["connect.sh","watchdog.sh"] = File.ls!("rel/extracted/lib/bottler-#{vsn}/scripts") |> Enum.sort
   end
 end
