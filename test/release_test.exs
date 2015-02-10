@@ -13,7 +13,7 @@ defmodule ReleaseTest do
     :os.cmd 'rm -fr rel'
 
     # generate release
-    assert :ok = Mix.Tasks.Release.run []
+    assert :ok = Mix.Tasks.Bottler.Release.run []
 
     # check rel term
     assert {:ok,[{:release, app, erts, deps}]} = H.read_terms "rel/bottler.rel"
