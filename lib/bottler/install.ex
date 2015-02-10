@@ -6,13 +6,14 @@ defmodule Bottler.Install do
 
   @moduledoc """
     Functions to install an already shipped release on remote servers.
+
+    Actually running release is not touched. Next restart will run
+    the new release.
   """
 
   @doc """
     Install previously shipped release on remote servers, making it _current_
-    release. Actually running release is not touched. Next restart will run
-    the new release.
-
+    release. 
     Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
   """
   def install(config) do
