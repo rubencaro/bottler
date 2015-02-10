@@ -31,5 +31,11 @@ defmodule Bottler do
     Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
   """
   def restart(config), do: Bottler.Restart.restart(config)
+  
+  @doc """
+    Restart to the previous version on remote servers.
+    Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
+  """
+  def rollback(config), do: Bottler.Rollback.rollback(config)
 
 end

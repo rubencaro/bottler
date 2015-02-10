@@ -91,6 +91,20 @@ Use like `mix deploy`.
 `prod` environment is used by default. Use like
 `MIX_ENV=other_env mix deploy` to force it to `other_env`.
 
+## Rollback
+
+Simply move the _current_ link to the previous release and restart to
+apply. It's quite faster than to deploy a previous release, that is
+also possible.
+
+Be careful because the _previous release_ may be different on each server.
+It's up to you to keep all your servers rollback-able (yeah).
+
+Use like `mix bottler.rollback`.
+
+`prod` environment is used by default. Use like
+`MIX_ENV=other_env mix bottler.rollback` to force it to `other_env`.
+
 ## TODOs
 
 * Add more testing
