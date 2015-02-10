@@ -13,14 +13,14 @@ defmodule Bottler.Helpers do
 
     If any task did not return as expected, then it returns `{:error, results}`.
 
-    If `inspect_results` is `true` then results are inspected before return.
+    If `to_s` is `true` then results are fed to `to_string` before return.
     This is useful when returned value is a char list and is to be printed to
     stdout.
   """
   def in_tasks(list, fun, opts \\ []) do
     expected = opts |> Keyword.get(:expected, :ok)
     timeout = opts |> Keyword.get(:timeout, 60_000)
-    inspect_results = opts |> Keyword.get(:inspect_results, false)
+    to_s = opts |> Keyword.get(:to_s, false)
 
     # run and get results
     tasks = for args <- list, into: [], do: Task.async(fn -> fun.(args) end)
@@ -28,8 +28,8 @@ defmodule Bottler.Helpers do
 
     # figure out return value
     sign = if Enum.all?(results, &(&1 == expected)), do: :ok, else: :error
-    if inspect_results, do: {sign, results},
-        else: {sign, to_string(inspect(results))}
+    if to_s, do: {sign, to_string(results)},
+        else: {sign, results}
   end
 
   @doc """
