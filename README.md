@@ -29,6 +29,12 @@ Maybe someday will be.
 Add to your `deps` like this:
 
 ```elixir
+    {:bottler, " >= 0.2.0"}
+```
+
+Or if you want to take a walk on the wild side:
+
+```elixir
     {:bottler, github: "elpulgardelpanda/bottler"}
 ```
 
@@ -45,16 +51,35 @@ docs for each task with `mix help <task>`.
 
 ## Release
 
-Build a release file. Use like `mix release`.
+Build a release file. Use like `mix bottler.release`.
 
 `prod` environment is used by default. Use like
-`MIX_ENV=other_env mix release` to force it to `other_env`.
+`MIX_ENV=other_env mix bottler.release` to force it to `other_env`.
 
 ## Ship
 
+Ship a release file to configured remote servers.
+Use like `mix bottler.ship`.
+
+`prod` environment is used by default. Use like
+`MIX_ENV=other_env mix bottler.ship` to force it to `other_env`.
+
 ## Install
 
+Install a shipped file on configured remote servers.
+Use like `mix bottler.install`.
+
+`prod` environment is used by default. Use like
+`MIX_ENV=other_env mix bottler.install` to force it to `other_env`.
+
 ## Restart
+
+Touch `tmp/restart` on configured remote servers.
+That expects to have `Harakiri` or similar software reacting to that.
+Use like `mix bottler.restart`.
+
+`prod` environment is used by default. Use like
+`MIX_ENV=other_env mix bottler.restart` to force it to `other_env`.
 
 ## Deploy
 
@@ -70,7 +95,6 @@ Use like `mix deploy`.
 
 * Add more testing
 * Get it stable on production
-* Add fast rollback (to any of previous versions)
 * Options to filter target servers from command line
 * Wait until _current_ release is seen running.
 * Complete README
@@ -86,6 +110,7 @@ Use like `mix deploy`.
 
 * Individual tasks for each step
 * Add connect script
+* Add fast rollback (to any of previous versions)
 
 ### 0.2.0
 

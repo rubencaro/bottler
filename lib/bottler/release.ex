@@ -42,7 +42,7 @@ defmodule Bottler.Release do
 
   # process templates found on scripts folder
   #
-  def process_scripts_folder(config) do
+  defp process_scripts_folder(config) do
     vars = [app: Mix.Project.get!.project[:app],
             user: config[:remote_user]]
     dest_path = "#{Mix.Project.app_path}/scripts"
@@ -68,7 +68,7 @@ defmodule Bottler.Release do
   # ignoring the extra `.eex` part (i.e. `shell.sh` from bottler would be
   # replaced with `shell.sh.eex` from the project ).
   #
-  def get_all_scripts do
+  defp get_all_scripts do
     pfiles = full_ls "lib/scripts"
     bfiles = full_ls "#{__DIR__}/../scripts"
     for f <- (bfiles ++ pfiles), into: %{}, do: {Path.basename(f,".eex"), f}

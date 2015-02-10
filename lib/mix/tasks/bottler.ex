@@ -92,7 +92,7 @@ end
 defmodule Mix.Tasks.Bottler.Restart do
 
   @moduledoc """
-    Touch tmp/restart on configured remote servers.
+    Touch `tmp/restart` on configured remote servers.
     That expects to have `Harakiri` or similar software reacting to that.
     Use like `mix bottler.restart`.
 
