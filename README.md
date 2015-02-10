@@ -8,7 +8,7 @@ them to your servers, install them there, and get them live on production.
 
 ## What
 
-Four main tools, that can be used separately:
+Several tools that can be used separately:
 
 * __release__: generate `tar.gz` files with your app and its dependencies (not
 including the whole `erts` by now).
@@ -16,13 +16,15 @@ including the whole `erts` by now).
 * __install__: properly install your shipped release on each of those servers.
 * __restart__: fire a quick restart to apply the newly installed release if you
 are using [Harakiri](http://github.com/elpulgardelpanda/harakiri).
+* __deploy__: _release_, _ship_, _install_ and then _restart_.
+* __rollback__: quick _restart_ on a previous release.
 
 You should have public key ssh access to all servers you intend to work with.
 Erlang runtime should be installed there too. Everything else, including Elixir
 itself, is included in the release.
 
 By now it's not able to deal with all the hot code swap bolts, screws and nuts.
-Maybe someday will be.
+Someday will be.
 
 ## Use
 
