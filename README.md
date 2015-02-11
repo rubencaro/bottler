@@ -114,10 +114,10 @@ Use like `mix bottler.rollback`.
 * Options to filter target servers from command line
 * Wait until _current_ release is seen running.
 * Complete README
-* Rollback to any previous version
+* Rollback to _any_ previous version
 * Optionally include `erts` (now we can ship openssl too see [here](http://www.erlang.org/download/otp_src_17.4.readme))
 * Use scalable middleplace to ship releases
-* Allow hot code swap?
+* Allow hot code swap
 * Support for hooks
 * Add tools for docker deploys
 
@@ -128,6 +128,7 @@ Use like `mix bottler.rollback`.
 * Individual tasks for each step
 * Add connect script
 * Add fast rollback
+* Few README improvements
 
 ### 0.2.0
 
