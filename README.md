@@ -123,6 +123,10 @@ Use like `mix bottler.rollback`.
 
 ## Changelog
 
+### 0.4.0
+
+* Use [SSHEx](https://github.com/elpulgardelpanda/sshex)
+
 ### 0.3.0
 
 * Individual tasks for each step

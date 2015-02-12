@@ -1,8 +1,8 @@
 require Logger, as: L
 require Bottler.Helpers, as: H
+alias SSHEx, as: S
 
 defmodule Bottler.Install do
-  alias Bottler.SSH
 
   @moduledoc """
     Functions to install an already shipped release on remote servers.
@@ -13,11 +13,10 @@ defmodule Bottler.Install do
 
   @doc """
     Install previously shipped release on remote servers, making it _current_
-    release. 
+    release.
     Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
   """
   def install(config) do
-    :ssh.start
     config[:servers] |> Keyword.values # each ip
     |> Enum.map(fn(s) -> s ++ [ user: config[:remote_user] ] end) # add user
     |> H.in_tasks( fn(args) -> on_server(args) end )
@@ -45,20 +44,20 @@ defmodule Bottler.Install do
     vsn = Mix.Project.get!.project[:version]
     app = Mix.Project.get!.project[:app]
     path = '/home/#{user}/#{app}/'
-    SSH.cmd! conn, 'mkdir -p #{path}releases/#{vsn}'
-    SSH.cmd! conn, 'mkdir -p #{path}log'
-    SSH.cmd! conn, 'mkdir -p #{path}tmp'
-    {:ok, _, 0} = SSH.run conn,
+    S.cmd! conn, 'mkdir -p #{path}releases/#{vsn}'
+    S.cmd! conn, 'mkdir -p #{path}log'
+    S.cmd! conn, 'mkdir -p #{path}tmp'
+    {:ok, _, 0} = S.run conn,
         'tar --directory #{path}releases/#{vsn}/ ' ++
         '-xf /tmp/#{app}.tar.gz'
-    SSH.cmd! conn, 'ln -sfn #{path}tmp ' ++
+    S.cmd! conn, 'ln -sfn #{path}tmp ' ++
                    '#{path}releases/#{vsn}/tmp'
-    SSH.cmd! conn, 'ln -sfn #{path}log ' ++
+    S.cmd! conn, 'ln -sfn #{path}log ' ++
                    '#{path}releases/#{vsn}/log'
-    SSH.cmd! conn,
+    S.cmd! conn,
         'ln -sfn #{path}releases/#{vsn}/releases/#{vsn} ' ++
         '#{path}releases/#{vsn}/boot'
-    SSH.cmd! conn,
+    S.cmd! conn,
         'ln -sfn #{path}releases/#{vsn}/lib/#{app}-#{vsn}/scripts ' ++
         '#{path}releases/#{vsn}/scripts'
   end
@@ -67,7 +66,7 @@ defmodule Bottler.Install do
     L.info "Marking release as current on #{ip}..."
     app = Mix.Project.get!.project[:app]
     vsn = Mix.Project.get!.project[:version]
-    {:ok, _, 0} = SSH.run conn,
+    {:ok, _, 0} = S.run conn,
                             'ln -sfn /home/#{user}/#{app}/releases/#{vsn} ' ++
                             ' /home/#{user}/#{app}/current'
   end
@@ -75,12 +74,12 @@ defmodule Bottler.Install do
   defp cleanup_old_releases(conn, user, ip) do
     L.info "Cleaning up old releases on #{ip}..."
     app = Mix.Project.get!.project[:app]
-    {:ok, res, 0} = SSH.run conn, 'ls -t /home/#{user}/#{app}/releases'
+    {:ok, res, 0} = S.run conn, 'ls -t /home/#{user}/#{app}/releases'
     excess_releases = res |> String.split("\n") |> Enum.slice(5..-2)
 
     for r <- excess_releases do
       L.info "Cleaning up old #{r}..."
-      {:ok, _, 0} = SSH.run conn, 'rm -fr /home/#{user}/#{app}/releases/#{r}'
+      {:ok, _, 0} = S.run conn, 'rm -fr /home/#{user}/#{app}/releases/#{r}'
     end
   end
 
