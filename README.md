@@ -48,8 +48,11 @@ On your config:
                                remote_user: "produser" ]
 ```
 
-Then you can use the tasks like `mix release`. Take a look at the
+Then you can use the tasks like `mix bottler.release`. Take a look at the
 docs for each task with `mix help <task>`.
+
+You may also want to add `/rel` to your `.gitignore` if you don't want every
+generated file, including release `.tar.gz`, get into your repo.
 
 ## Release
 
