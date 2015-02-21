@@ -123,6 +123,8 @@ Use like `mix bottler.rollback`.
 * Allow hot code swap
 * Support for hooks
 * Add tools for docker deploys
+* Add support for deploy to AWS instances [*](https://github.com/gleber/erlcloud)
+* Add support for deploy to GCE instances
 
 ## Changelog
 
