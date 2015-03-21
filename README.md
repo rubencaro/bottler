@@ -31,7 +31,7 @@ Someday will be.
 Add to your `deps` like this:
 
 ```elixir
-    {:bottler, " >= 0.2.0"}
+    {:bottler, " >= 0.3.0"}
 ```
 
 Or if you want to take a walk on the wild side:
@@ -119,11 +119,11 @@ Use like `mix bottler.rollback`.
 * Complete README
 * Rollback to _any_ previous version
 * Optionally include `erts` (now we can ship openssl too see [here](http://www.erlang.org/download/otp_src_17.4.readme))
-* Use scalable middleplace to ship releases
+* Use scalable middleplace to ship releases [*](notes/scalable_shipment.md)
 * Allow hot code swap
 * Support for hooks
 * Add tools for docker deploys
-* Add support for deploy to AWS instances [*](https://github.com/gleber/erlcloud)
+* Add support for deploy to AWS instances [*](https://github.com/gleber/erlcloud)[*](notes/aws.md)
 * Add support for deploy to GCE instances
 * Start SSH daemon on target nodes for better remote working support
 
