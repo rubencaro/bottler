@@ -125,6 +125,7 @@ Use like `mix bottler.rollback`.
 * Add tools for docker deploys
 * Add support for deploy to AWS instances [*](https://github.com/gleber/erlcloud)
 * Add support for deploy to GCE instances
+* Start SSH daemon on target nodes for better remote working support
 
 ## Changelog
 
