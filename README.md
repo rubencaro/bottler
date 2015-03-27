@@ -112,6 +112,7 @@ Use like `mix bottler.rollback`.
 
 ## TODOs
 
+* Start SSH daemon on target nodes for better remote working support
 * Add more testing
 * Get it stable on production
 * Options to filter target servers from command line
@@ -125,7 +126,6 @@ Use like `mix bottler.rollback`.
 * Add tools for docker deploys
 * Add support for deploy to AWS instances [*](https://github.com/gleber/erlcloud)[*](notes/aws.md)
 * Add support for deploy to GCE instances
-* Start SSH daemon on target nodes for better remote working support
 
 ## Changelog
 
