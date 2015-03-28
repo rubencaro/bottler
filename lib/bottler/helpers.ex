@@ -115,4 +115,16 @@ defmodule Bottler.Helpers do
       _ -> {:error, "Release step failed. Please fix any errors and try again."}
     end
   end
+
+  @doc """
+    `ls` with full paths
+    Returns the list of full paths. An empty list if anything fails
+  """
+  def full_ls(path) do
+    expanded = Path.expand(path)
+    case path |> File.ls do
+      {:ok, list} -> Enum.map(list,&( "#{expanded}/#{&1}" ))
+      _ -> []
+    end
+  end
 end

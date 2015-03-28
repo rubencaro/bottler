@@ -69,20 +69,9 @@ defmodule Bottler.Release do
   # replaced with `shell.sh.eex` from the project ).
   #
   defp get_all_scripts do
-    pfiles = full_ls "lib/scripts"
-    bfiles = full_ls "#{__DIR__}/../scripts"
+    pfiles = H.full_ls "lib/scripts"
+    bfiles = H.full_ls "#{__DIR__}/../scripts"
     for f <- (bfiles ++ pfiles), into: %{}, do: {Path.basename(f,".eex"), f}
-  end
-
-  # ls with full paths
-  # Return empty list if anything fails
-  #
-  defp full_ls(path) do
-    expanded = Path.expand(path)
-    case path |> File.ls do
-      {:ok, list} -> Enum.map(list,&( "#{expanded}/#{&1}" ))
-      _ -> []
-    end
   end
 
   # TODO: ensure paths
