@@ -79,6 +79,8 @@ defmodule Bottler.Helpers do
 
     if not is_binary(c[:remote_user]), do: raise ":bottler :remote_user should be a binary"
 
+    if not is_integer(c[:remote_port]), do: Keyword.put(c,:remote_port,22)
+
     c
   end
 

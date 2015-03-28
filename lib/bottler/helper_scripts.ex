@@ -19,15 +19,20 @@ defmodule Bottler.HelperScripts do
   def helper_scripts(config) do
     L.info "Generating helper scripts..."
 
-    generate_ssh_server_scripts
-    link_scripts_to_path
+    generate_ssh_server_scripts config
+    link_scripts_to_path config
   end
 
-  defp generate_ssh_server_scripts do
-    app = Mix.Project.get!.project[:app]
+  # Generate individual `<project>_<server>` scripts in configured
+  # `scripts_folder`. They should open an SSH shell to each server.
+  #
+  defp generate_ssh_server_scripts(config) do
+    template = Path.expand("lib/helper_scripts") <> "/ssh_server_script.sh.eex"
+    vars = [port: config[:remote_port],
+            user: config[:remote_user]]
   end
 
-  defp link_scripts_to_path do
+  defp link_scripts_to_path(config) do
   end
 
 end
