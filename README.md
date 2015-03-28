@@ -112,7 +112,7 @@ Use like `mix bottler.rollback`.
 
 ## TODOs
 
-* Start SSH daemon on target nodes for better remote working support
+* Add helper scripts generator
 * Add more testing
 * Get it stable on production
 * Options to filter target servers from command line
