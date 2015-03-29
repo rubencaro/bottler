@@ -1,5 +1,6 @@
 require Logger, as: L
 require Bottler.Helpers, as: H
+alias Keyword, as: K
 
 defmodule Bottler.HelperScripts do
 
@@ -14,25 +15,38 @@ defmodule Bottler.HelperScripts do
     It reads project configuration and generates helper scripts based on them.
     Then puts links to them on PATH to make them usable.
 
-    Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
+    Returns `:ok` when done. Raises exception if anything fails.
   """
-  def helper_scripts(config) do
+  def helper_scripts(c) do
     L.info "Generating helper scripts..."
+    args = %{
+      template: Path.expand("lib/helper_scripts") <> "/ssh_server_script.sh.eex",
+      dest_path: c[:scripts_folder] |> Path.expand,
+      links_path: c[:into_path_folder] |> Path.expand,
+      app: Mix.Project.get!.project[:app],
+      common: [ port: c[:remote_port],
+                user: c[:remote_user] ]
+    }
 
-    generate_ssh_server_scripts config
-    link_scripts_to_path config
+    for {server,_} <- c[:servers],
+      do: args |> Map.put(:server, server) |> create_server_script
+
+    # make them executable
+    [] = :os.cmd 'chmod -R #{args.dest_path}'
+
+    L.info "Done"
+    :ok
   end
 
-  # Generate individual `<project>_<server>` scripts in configured
-  # `scripts_folder`. They should open an SSH shell to each server.
-  #
-  defp generate_ssh_server_scripts(config) do
-    template = Path.expand("lib/helper_scripts") <> "/ssh_server_script.sh.eex"
-    vars = [port: config[:remote_port],
-            user: config[:remote_user]]
-  end
+  defp create_server_script(p) do
+    L.info "  -> #{p.app}_#{p.server}"
+    file = "#{p.dest_path}/#{p.app}_#{p.server}"
+    vars = p.common |> K.merge [host: p.server]
 
-  defp link_scripts_to_path(config) do
+    # render, write & link
+    body = EEx.eval_file p.template, vars
+    :ok = File.write file, body, [:write]
+    [] = :os.cmd 'ln -s #{file} #{p.links_path}/'
   end
 
 end

@@ -40,7 +40,7 @@ defmodule Bottler do
 
   @doc """
     Generate helper scripts and put them on PATH.
-    Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
+    Returns `:ok` when done. Raises exception if anything fails.
   """
   def helper_scripts(config), do: Bottler.HelperScripts.helper_scripts(config)
 

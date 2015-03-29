@@ -166,7 +166,7 @@ defmodule Mix.Tasks.Bottler.HelperScripts do
   def run(_args) do
     H.set_prod_environment
     c = H.read_and_validate_config
-    {:ok, _} = B.helper_scripts c
+    :ok = B.helper_scripts c
     :ok
   end
 
