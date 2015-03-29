@@ -1,4 +1,5 @@
 require Logger, as: L
+alias Keyword, as: K
 
 defmodule Bottler.Helpers do
 
@@ -18,9 +19,9 @@ defmodule Bottler.Helpers do
     stdout.
   """
   def in_tasks(list, fun, opts \\ []) do
-    expected = opts |> Keyword.get(:expected, :ok)
-    timeout = opts |> Keyword.get(:timeout, 60_000)
-    to_s = opts |> Keyword.get(:to_s, false)
+    expected = opts |> K.get(:expected, :ok)
+    timeout = opts |> K.get(:timeout, 60_000)
+    to_s = opts |> K.get(:to_s, false)
 
     # run and get results
     tasks = for args <- list, into: [], do: Task.async(fn -> fun.(args) end)
@@ -66,20 +67,19 @@ defmodule Bottler.Helpers do
     Raises an error if anything looks wrong.
   """
   def read_and_validate_config do
-    c = Application.get_env(:bottler, :params)
+    c = [ scripts_folder: ".bottler/scripts",
+          into_path_folder: "~/.local/bin",
+          remote_port: 22 ]
+        |> K.merge Application.get_env(:bottler, :params)
 
     L.debug inspect(c)
 
-    if not Keyword.keyword?(c[:servers]),
+    if not K.keyword?(c[:servers]),
       do: raise ":bottler :servers should be a keyword list, it was #{inspect c[:servers]}"
-    if not Enum.all?(c[:servers], fn({_,v})-> :ip in Keyword.keys(v) end),
+    if not Enum.all?(c[:servers], fn({_,v})-> :ip in K.keys(v) end),
       do: raise ":bottler :servers should look like \n" <>
                 "    [srvname: [ip: '' | rest ] | rest ]\n" <>
                 "but was\n    #{inspect c[:servers]}"
-
-    if not is_binary(c[:remote_user]), do: raise ":bottler :remote_user should be a binary"
-
-    if not is_integer(c[:remote_port]), do: Keyword.put(c,:remote_port,22)
 
     c
   end

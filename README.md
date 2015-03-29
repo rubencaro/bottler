@@ -97,7 +97,7 @@ Use like `mix bottler.rollback`.
 
 This generates some helper scripts using project's current config information, such as target servers. You can run this task repeatedly to force regeneration of these scripts to reflect config changes.
 
-Generated scripts are located under `<project>/.bottler/scripts` (configurable via `scripts_folder`). It will also generate links to those scripts on a configurable folder to add them to your system PATH. The configuration param is `script_links_folder`. Its default value is `~/local/bin`.
+Generated scripts are located under `<project>/.bottler/scripts` (configurable via `scripts_folder`). It will also generate links to those scripts on a configurable folder to add them to your system PATH. The configuration param is `into_path_folder`. Its default value is `~/local/bin`.
 
 Use like `mix bottler.helper_scripts`.
 
