@@ -129,4 +129,19 @@ defmodule Bottler.Helpers do
       _ -> []
     end
   end
+
+  @doc """
+    Delete, then recreate given folders
+  """
+  def empty_dirs(paths) when is_list(paths) do
+    for p <- paths, do: empty_dir(p)
+  end
+
+  @doc """
+    Delete, then recreate given folder
+  """
+  def empty_dir(path) do
+    File.rm_rf! path
+    File.mkdir_p! path
+  end
 end

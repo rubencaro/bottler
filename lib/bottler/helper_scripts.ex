@@ -18,7 +18,7 @@ defmodule Bottler.HelperScripts do
     Returns `:ok` when done. Raises exception if anything fails.
   """
   def helper_scripts(c) do
-    L.info "Generating helper scripts..."
+
     args = %{
       template: Path.expand("lib/helper_scripts") <> "/ssh_server_script.sh.eex",
       dest_path: c[:scripts_folder] |> Path.expand,
@@ -28,11 +28,17 @@ defmodule Bottler.HelperScripts do
                 user: c[:remote_user] ]
     }
 
+    # clean previous scripts
+    args |> Map.put(:servers, c[:servers]) |> clean_previous
+
+    L.info "Generating helper scripts..."
+
+    # render, create & link files
     for {server,_} <- c[:servers],
       do: args |> Map.put(:server, server) |> create_server_script
 
     # make them executable
-    [] = :os.cmd 'chmod -R #{args.dest_path}'
+    "" = 'chmod -R +x #{args.dest_path}' |> :os.cmd |> to_string
 
     L.info "Done"
     :ok
@@ -41,12 +47,21 @@ defmodule Bottler.HelperScripts do
   defp create_server_script(p) do
     L.info "  -> #{p.app}_#{p.server}"
     file = "#{p.dest_path}/#{p.app}_#{p.server}"
-    vars = p.common |> K.merge [host: p.server]
+    vars = p.common |> K.merge [server: p.server]
 
     # render, write & link
     body = EEx.eval_file p.template, vars
     :ok = File.write file, body, [:write]
     [] = :os.cmd 'ln -s #{file} #{p.links_path}/'
+  end
+
+  defp clean_previous(p) do
+    L.info "Cleaning previous helper scripts..."
+
+    H.empty_dir p.dest_path
+
+    for {server,_} <- p[:servers],
+      do: File.rm("#{p.links_path}/#{p.app}_#{server}")
   end
 
 end
