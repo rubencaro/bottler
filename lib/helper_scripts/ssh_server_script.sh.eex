@@ -4,8 +4,8 @@
 # Putting your pub key into remote's `authorized_keys` will make it even funnier.
 
 user="<%= user %>"
-server="<%= server %>"
+host="<%= host %>"
 port="<%= port %>"
 
-cmd="ssh -p $port $user@$server"
+cmd="ssh -p $port $user@$host"
 $cmd

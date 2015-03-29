@@ -34,8 +34,8 @@ defmodule Bottler.HelperScripts do
     L.info "Generating helper scripts..."
 
     # render, create & link files
-    for {server,_} <- c[:servers],
-      do: args |> Map.put(:server, server) |> create_server_script
+    for {s, d} <- c[:servers],
+      do: args |> Map.merge(%{host: d[:ip], server: s}) |> create_server_script
 
     # make them executable
     "" = 'chmod -R +x #{args.dest_path}' |> :os.cmd |> to_string
@@ -47,21 +47,22 @@ defmodule Bottler.HelperScripts do
   defp create_server_script(p) do
     L.info "  -> #{p.app}_#{p.server}"
     file = "#{p.dest_path}/#{p.app}_#{p.server}"
-    vars = p.common |> K.merge [server: p.server]
+    vars = p.common |> K.merge [host: p.host]
 
     # render, write & link
     body = EEx.eval_file p.template, vars
+
     :ok = File.write file, body, [:write]
     [] = :os.cmd 'ln -s #{file} #{p.links_path}/'
   end
 
   defp clean_previous(p) do
-    L.info "Cleaning previous helper scripts..."
-
+    # remove links to previous scripts (`dest_path` should not change!)
+    files = p.dest_path |> File.ls!
+    L.info "Cleaning previous helper scripts...\n  #{files |> Enum.join("\n  ")}"
+    for f <- files, do: File.rm("#{p.links_path}/#{f}")
+    # now clear the way
     H.empty_dir p.dest_path
-
-    for {server,_} <- p[:servers],
-      do: File.rm("#{p.links_path}/#{p.app}_#{server}")
   end
 
 end

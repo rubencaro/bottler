@@ -54,9 +54,9 @@ defmodule HelperScriptsTest do
 
   defp check_server_file(path, name, ip, user, port) do
     body = "#{path}/bottler_#{name}" |> File.read!
-    assert Regex.match?(~r/#{Regex.escape(ip)}/, body)
-    assert Regex.match?(~r/#{user}/, body)
-    assert Regex.match?(~r/#{port}/, body)
+    assert String.contains?(body,ip), body
+    assert String.contains?(body,user), body
+    assert String.contains?(body,to_string(port)), body
   end
 
 end
