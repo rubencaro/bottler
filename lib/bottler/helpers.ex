@@ -96,16 +96,15 @@ defmodule Bottler.Helpers do
   def read_terms(path), do: :file.consult('#{path}')
 
   @doc """
-    Spit to logger any passed variable, with location information if `caller`
-    (such as `__ENV__`) is given.
+    Spit to logger any passed variable, with location information.
   """
-  def spit(obj, caller \\ nil, inspect_opts \\ []) do
-    loc = case caller do
-      %{file: file, line: line} -> "\n\n#{file}:#{line}"
-      _ -> ""
+  defmacro spit(obj, inspect_opts \\ []) do
+    quote do
+      %{file: file, line: line} = __ENV__
+      [ :bright, :red, "\n\n#{file}:#{line}",
+        :normal, "\n\n#{inspect(unquote(obj),unquote(inspect_opts))}\n\n", :reset]
+      |> IO.ANSI.format(true) |> Logger.info
     end
-    [ :bright, :red, "#{loc}", :normal, "\n\n#{inspect(obj,inspect_opts)}\n\n", :reset]
-    |> IO.ANSI.format(true) |> Logger.info
   end
 
   @doc """
