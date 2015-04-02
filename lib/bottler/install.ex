@@ -17,6 +17,7 @@ defmodule Bottler.Install do
     Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
   """
   def install(config) do
+    :ssh.start # sometimes it's not already started at this point...
     config[:servers] |> Keyword.values # each ip
     |> Enum.map(fn(s) -> s ++ [ user: config[:remote_user] ] end) # add user
     |> H.in_tasks( fn(args) -> on_server(args) end )
