@@ -124,6 +124,10 @@ The generated scripts' list is short by now:
 
 ## Changelog
 
+### 0.4.1
+
+* Fix `:ssh` sometimes not started on install.
+
 ### 0.4.0
 
 * Use [SSHEx](https://github.com/elpulgardelpanda/sshex)
