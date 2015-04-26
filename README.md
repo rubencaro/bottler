@@ -27,6 +27,12 @@ itself, is included in the release.
 By now it's not able to deal with all the hot code swap bolts, screws and nuts.
 Someday will be.
 
+## Alternative to...
+
+Initially it was an alternative to [exrm](https://github.com/bitwalker/exrm), due to its lack of some features I love. 
+
+Recently, after creating and using bottler on several projects for some months, I discovered [edeliver](https://github.com/boldpoker/edeliver) and it looks great! When I have time I will read carefully its code and play differences with bottler, maybe borrow some ideas. 
+
 ## Use
 
 Add to your `deps` like this:
