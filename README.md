@@ -1,6 +1,6 @@
 # Bottler (BETA)
 
-[![Build Status](https://travis-ci.org/rubencaro/bottler.svg?branch=master)](https://travis-ci.org/elpulgardelpanda/bottler)
+[![Build Status](https://travis-ci.org/rubencaro/bottler.svg?branch=master)](https://travis-ci.org/rubencaro/bottler)
 [![Hex Version](http://img.shields.io/hexpm/v/bottler.svg?style=flat)](https://hex.pm/packages/bottler)
 
 Bottler is a collection of tools that aims to help you generate releases, ship
@@ -29,9 +29,9 @@ Someday will be.
 
 ## Alternative to...
 
-Initially it was an alternative to [exrm](https://github.com/bitwalker/exrm), due to its lack of some features I love. 
+Initially it was an alternative to [exrm](https://github.com/bitwalker/exrm), due to its lack of some features I love.
 
-Recently, after creating and using bottler on several projects for some months, I discovered [edeliver](https://github.com/boldpoker/edeliver) and it looks great! When I have time I will read carefully its code and play differences with bottler, maybe borrow some ideas. 
+Recently, after creating and using bottler on several projects for some months, I discovered [edeliver](https://github.com/boldpoker/edeliver) and it looks great! When I have time I will read carefully its code and play differences with bottler, maybe borrow some ideas.
 
 ## Use
 
