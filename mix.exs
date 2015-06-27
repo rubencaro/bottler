@@ -23,7 +23,7 @@ defmodule Bottler.Mixfile do
   defp package do
     [contributors: ["Rubén Caro"],
      licenses: ["MIT"],
-     links: %{github: "https://github.com/elpulgardelpanda/bottler"}]
+     links: %{github: "https://github.com/rubencaro/bottler"}]
   end
 
   defp deps do
