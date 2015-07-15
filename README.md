@@ -130,6 +130,10 @@ The generated scripts' list is short by now:
 
 ## Changelog
 
+### 0.5.0
+
+* Use new SSHEx 1.1.0
+
 ### 0.4.1
 
 * Fix `:ssh` sometimes not started on install.
