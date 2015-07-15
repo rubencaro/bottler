@@ -38,13 +38,13 @@ Recently, after creating and using bottler on several projects for some months, 
 Add to your `deps` like this:
 
 ```elixir
-    {:bottler, " >= 0.4.0"}
+    {:bottler, " >= 0.5.0"}
 ```
 
 Or if you want to take a walk on the wild side:
 
 ```elixir
-    {:bottler, github: "elpulgardelpanda/bottler"}
+    {:bottler, github: "rubencaro/bottler"}
 ```
 
 On your config:
