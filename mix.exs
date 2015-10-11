@@ -21,12 +21,12 @@ defmodule Bottler.Mixfile do
   end
 
   defp package do
-    [contributors: ["Rubén Caro"],
+    [maintainers: ["Rubén Caro"],
      licenses: ["MIT"],
      links: %{github: "https://github.com/rubencaro/bottler"}]
   end
 
   defp deps do
-    [{:sshex, "1.3.0"}]
+    [{:sshex, "1.3.1"}]
   end
 end

@@ -50,8 +50,12 @@ defmodule Bottler.Helpers do
       Mix.env :prod
     end
 
-    :ok = "config/config.exs" |> Path.absname
-          |>  Mix.Config.import_config |> Mix.Config.persist
+    res = "config/config.exs" |> Path.absname
+          |> Mix.Config.read! |> Mix.Config.persist
+
+    # different responses for Elixir 1.0 and 1.1, we want both
+    if not res in [ [:logger,:bottler], :ok ],
+      do: raise "Could not persist the requested config: #{inspect(res)}"
 
     # destroy other environments' traces, helpful for environment debugging
     # {:ok, _} = File.rm_rf("_build")
@@ -96,14 +100,23 @@ defmodule Bottler.Helpers do
   def read_terms(path), do: :file.consult('#{path}')
 
   @doc """
-    Spit to logger any passed variable, with location information.
+    Spit to output any passed variable, with location information.
   """
-  defmacro spit(obj, inspect_opts \\ []) do
+  defmacro spit(obj \\ "", inspect_opts \\ []) do
     quote do
       %{file: file, line: line} = __ENV__
-      [ :bright, :red, "\n\n#{file}:#{line}",
-        :normal, "\n\n#{inspect(unquote(obj),unquote(inspect_opts))}\n\n", :reset]
-      |> IO.ANSI.format(true) |> Logger.info
+      name = Process.info(self)[:registered_name]
+      chain = [ :bright, :red, "\n\n#{file}:#{line}",
+                :normal, "\n     #{inspect self}", :green," #{name}"]
+
+      msg = inspect(unquote(obj),unquote(inspect_opts))
+      if String.length(msg) > 2, do: chain = chain ++ [:red, "\n\n#{msg}"]
+
+      # chain = chain ++ [:yellow, "\n\n#{inspect Process.info(self)}"]
+
+      (chain ++ ["\n\n", :reset]) |> IO.ANSI.format(true) |> IO.puts
+
+      unquote(obj)
     end
   end
 
