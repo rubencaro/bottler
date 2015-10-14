@@ -16,7 +16,7 @@ including the whole `erts` by now).
 * __ship__: ship your generated `tar.gz` via `scp` to every server you configure.
 * __install__: properly install your shipped release on each of those servers.
 * __restart__: fire a quick restart to apply the newly installed release if you
-are using [Harakiri](http://github.com/elpulgardelpanda/harakiri).
+are using [Harakiri](http://github.com/rubencaro/harakiri).
 * __deploy__: _release_, _ship_, _install_ and then _restart_.
 * __rollback__: quick _restart_ on a previous release.
 * __helper_scripts__: generate some helper scripts based on project config.
@@ -123,7 +123,7 @@ The generated scripts' list is short by now:
 * Rollback to _any_ previous version
 * Optionally include `erts` (now we can ship openssl too see [here](http://www.erlang.org/download/otp_src_17.4.readme))
 * Use scalable middleplace to ship releases [*](notes/scalable_shipment.md)
-* Allow hot code swap
+* Allow hot code swap (just follow [this](http://erlang.org/doc/design_principles/release_handling.html) to prepare the release, and then provide an example of [Harakiri](http://github.com/rubencaro/harakiri) action that actually performs the upgrade)
 * Support for hooks
 * Add tools for docker deploys
 * Add support for deploy to AWS instances [*](https://github.com/gleber/erlcloud)[*](notes/aws.md)
@@ -133,7 +133,7 @@ The generated scripts' list is short by now:
 
 ### master
 
-* Use SSHEx 1.3.0
+* Use SSHEx 1.3.1
 
 ### 0.5.0
 
