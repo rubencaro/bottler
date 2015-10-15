@@ -133,7 +133,7 @@ The generated scripts' list is short by now:
 
 ### master
 
-* Use SSHEx 1.3.1
+* Use SSHEx 2.0.0
 
 ### 0.5.0
 
