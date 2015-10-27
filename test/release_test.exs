@@ -7,7 +7,7 @@ defmodule ReleaseTest do
     vsn = Bottler.Mixfile.project[:version]
     apps = [:bottler,:kernel,:stdlib,:elixir,:logger,:crypto,:sasl,:compiler,
             :ssh,:syntax_tools,:sshex]
-    iapps = [:public_key,:asn1,:mix]
+    iapps = [:public_key,:asn1]
 
     # clean any previous work
     :os.cmd 'rm -fr rel'
