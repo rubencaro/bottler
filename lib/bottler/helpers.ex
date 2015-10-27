@@ -54,7 +54,7 @@ defmodule Bottler.Helpers do
           |> Mix.Config.read! |> Mix.Config.persist
 
     # different responses for Elixir 1.0 and 1.1, we want both
-    if not res in [ [:logger,:bottler], :ok ],
+    if not is_ok_response_for_10_and_11(res),
       do: raise "Could not persist the requested config: #{inspect(res)}"
 
     # destroy other environments' traces, helpful for environment debugging
@@ -64,6 +64,18 @@ defmodule Bottler.Helpers do
     [] = :os.cmd 'touch config/config.exs'
 
     :ok
+  end
+
+  # hack to allow different responses for Elixir 1.0 and 1.1
+  # 1.0 -> :ok
+  # 1.1 -> is a list and includes at least bottler config keys
+  #
+  defp is_ok_response_for_10_and_11(res) do
+    case res do
+      :ok -> true
+      x when is_list(res) -> Enum.all?([:logger,:bottler], fn(i)-> i in res end)
+      _ -> false
+    end
   end
 
   @doc """
