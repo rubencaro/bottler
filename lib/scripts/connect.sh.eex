@@ -9,9 +9,8 @@
 
 app="<%= app %>"
 
-# connect with interactive erlang
-# run `'Elixir.IEx':start().` from there to get interactive elixir
-cmd="erl -remsh $app@localhost -sname connector"
+# connect with interactive erlang via iex
+cmd="iex --sname connector --remsh $app@localhost"
 $cmd
 
 ########################################
