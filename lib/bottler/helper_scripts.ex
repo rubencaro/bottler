@@ -1,6 +1,5 @@
 require Logger, as: L
 require Bottler.Helpers, as: H
-alias Keyword, as: K
 
 defmodule Bottler.HelperScripts do
 
@@ -47,7 +46,7 @@ defmodule Bottler.HelperScripts do
   defp create_server_script(p) do
     L.info "  -> #{p.app}_#{p.server}"
     file = "#{p.dest_path}/#{p.app}_#{p.server}"
-    vars = p.common |> K.merge [host: p.host]
+    vars = Keyword.merge(p.common, [host: p.host])
 
     # render, write & link
     body = EEx.eval_file p.template, vars

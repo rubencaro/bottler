@@ -73,7 +73,7 @@ defmodule Bottler.Helpers do
   defp is_ok_response_for_10_and_11(res) do
     case res do
       :ok -> true
-      x when is_list(res) -> Enum.all?([:logger,:bottler], fn(i)-> i in res end)
+      x when is_list(x) -> Enum.all?([:logger,:bottler], fn(i)-> i in res end)
       _ -> false
     end
   end
@@ -86,7 +86,7 @@ defmodule Bottler.Helpers do
     c = [ scripts_folder: ".bottler/scripts",
           into_path_folder: "~/.local/bin",
           remote_port: 22 ]
-        |> K.merge Application.get_env(:bottler, :params)
+        |> K.merge(Application.get_env(:bottler, :params))
 
     L.debug inspect(c)
 

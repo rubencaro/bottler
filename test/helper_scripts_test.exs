@@ -25,7 +25,7 @@ defmodule HelperScriptsTest do
     :ok = Bottler.HelperScripts.helper_scripts config
 
     # everything looks fine
-    names = config[:servers] |> Keyword.keys |> Enum.map &("bottler_#{&1}")
+    names = config[:servers] |> Keyword.keys |> Enum.map(&("bottler_#{&1}"))
     assert names == sf |> File.ls! |> Enum.sort
     assert names ++ ["witness"] == ipf |> File.ls! |> Enum.sort
     for {s,opts} <- config[:servers],
@@ -44,7 +44,7 @@ defmodule HelperScriptsTest do
     :ok = Bottler.HelperScripts.helper_scripts config
 
     # everything was cleaned and recreated with new values
-    names = config[:servers] |> Keyword.keys |> Enum.map &("bottler_#{&1}")
+    names = config[:servers] |> Keyword.keys |> Enum.map(&("bottler_#{&1}"))
     assert names == sf |> File.ls! |> Enum.sort
     assert names ++ ["witness"] == ipf |> File.ls! |> Enum.sort
     for {s,opts} <- config[:servers],
