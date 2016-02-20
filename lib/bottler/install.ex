@@ -29,8 +29,7 @@ defmodule Bottler.Install do
 
     L.info "Installing #{Mix.Project.get!.project[:version]} on #{ip}..."
 
-    {:ok, conn} = :ssh.connect(ip, 22,
-                        [{:user,user},{:silently_accept_hosts,true}], 5000)
+    {:ok, conn} = SSHEx.connect ip: ip, user: user
 
     place_files conn, user, ip
     make_current conn, user, ip

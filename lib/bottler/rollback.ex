@@ -30,8 +30,7 @@ defmodule Bottler.Rollback do
     ip = args[:ip] |> to_char_list
     user = args[:user] |> to_char_list
 
-    {:ok, conn} = :ssh.connect(ip, 22,
-                        [{:user,user},{:silently_accept_hosts,true}], 5000)
+    {:ok, conn} = SSHEx.connect ip: ip, user: user
 
     previous = get_previous_release conn, user
 

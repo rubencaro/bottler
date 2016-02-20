@@ -27,6 +27,6 @@ defmodule Bottler.Mixfile do
   end
 
   defp deps do
-    [{:sshex, "2.0.1"}]
+    [{:sshex, "~> 2.1"}]
   end
 end
