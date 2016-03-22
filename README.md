@@ -53,7 +53,8 @@ On your config:
 ```elixir
     config :bottler, :params, [servers: [server1: [ip: "1.1.1.1"],
                                          server2: [ip: "1.1.1.2"]],
-                               remote_user: "produser" ]
+                               remote_user: "produser",
+                               cookie: "secretcookie" ]
 ```
 
 Then you can use the tasks like `mix bottler.release`. Take a look at the docs for each task with `mix help <task>`.

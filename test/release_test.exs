@@ -31,7 +31,7 @@ defmodule ReleaseTest do
 
     # check config term
     assert {:ok,[config_term]} = H.read_terms "rel/sys.config"
-    assert [logger: _, bottler: [params: [servers: _, remote_user: _]]] = config_term
+    assert [logger: _, bottler: [params: [servers: _, remote_user: _, cookie: _]]] = config_term
 
     # check tar.gz exists and extracts
     assert File.regular?("rel/bottler.tar.gz")

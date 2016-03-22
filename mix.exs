@@ -6,12 +6,7 @@ defmodule Bottler.Mixfile do
      version: "0.5.0",
      elixir: ">= 1.0.0",
      package: package,
-     description: """
-        Help you bottle, ship and serve your Elixir apps.
-        Bottler is a collection of tools that aims to help you
-        generate releases, ship them to your servers, install them there, and
-        get them live on production.
-      """,
+     description: "Help you bottle, ship and serve your Elixir apps.",
      deps: deps]
   end
 

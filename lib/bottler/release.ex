@@ -44,7 +44,8 @@ defmodule Bottler.Release do
   #
   defp process_scripts_folder(config) do
     vars = [app: Mix.Project.get!.project[:app],
-            user: config[:remote_user]]
+            user: config[:remote_user],
+            cookie: config[:cookie]]
     dest_path = "#{Mix.Project.app_path}/scripts"
     File.mkdir_p! dest_path
 
