@@ -8,9 +8,10 @@
 # and ensure networks are visible.
 
 app="<%= app %>"
+cookie="<%= cookie %>"
 
 # connect with interactive erlang via iex
-cmd="iex --sname connector --remsh $app@localhost"
+cmd="iex --name connector@127.0.0.1 --setcookie $cookie --remsh $app@127.0.0.1"
 $cmd
 
 ########################################
