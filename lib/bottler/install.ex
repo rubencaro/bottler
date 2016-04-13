@@ -19,7 +19,7 @@ defmodule Bottler.Install do
   def install(config) do
     :ssh.start # sometimes it's not already started at this point...
     config[:servers] |> Keyword.values # each ip
-    |> Enum.map(fn(s) -> s ++ [ user: config[:remote_user] ] end) # add user
+    |> Enum.map(fn(s) -> s ++ [ user: config[:remote_user], additional_folders: config[:additional_folders] ] end) # add user, additional folders
     |> H.in_tasks( fn(args) -> on_server(args) end )
   end
 
@@ -31,7 +31,7 @@ defmodule Bottler.Install do
 
     {:ok, conn} = SSHEx.connect ip: ip, user: user
 
-    place_files conn, user, ip
+    place_files conn, user, ip, args[:additional_folders]
     make_current conn, user, ip
     cleanup_old_releases conn, user, ip
     :ok
@@ -39,7 +39,7 @@ defmodule Bottler.Install do
 
   # Decompress release file, put it in place, and make needed movements
   #
-  defp place_files(conn, user, ip) do
+  defp place_files(conn, user, ip, additional_folders \\ []) do
     L.info "Settling files on #{ip}..."
     vsn = Mix.Project.get!.project[:version]
     app = Mix.Project.get!.project[:app]
@@ -60,6 +60,12 @@ defmodule Bottler.Install do
     S.cmd! conn,
         'ln -sfn #{path}releases/#{vsn}/lib/#{app}-#{vsn}/scripts ' ++
         '#{path}releases/#{vsn}/scripts'
+    additional_folders
+      |> Enum.each(fn(folder) ->
+        S.cmd! conn,
+            'ln -sfn #{path}releases/#{vsn}/lib/#{app}-#{vsn}/#{folder} ' ++
+            '#{path}releases/#{vsn}/#{folder}'
+      end)
   end
 
   defp make_current(conn, user, ip) do

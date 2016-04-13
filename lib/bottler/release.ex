@@ -32,11 +32,16 @@ defmodule Bottler.Release do
 
     # add scripts folder
     process_scripts_folder config
+    process_additional_folders config
+
+    # list of atoms representing the dirs to include in the tar
+    additional_folders = config[:additional_folders] |> Enum.map(&(String.to_atom(&1)))
+    dirs = [:scripts] ++ additional_folders
 
     ebin_path = '#{Mix.Project.build_path}/lib/*/ebin'
     File.cd! "rel", fn() ->
       :systools.make_script(app,[path: [ebin_path]])
-      :systools.make_tar(app,[dirs: [:scripts], path: [ebin_path]])
+      :systools.make_tar(app,[dirs: dirs, path: [ebin_path]])
     end
   end
 
@@ -60,6 +65,23 @@ defmodule Bottler.Release do
     # save renders over them
     for {f,body} <- renders,
       do: :ok = File.write "#{dest_path}/#{f}", body, [:write]
+  end
+
+  # copy additional folders to the destination folder to be included in the tar file
+  #
+  defp process_additional_folders(config) do
+    config[:additional_folders] |> Enum.each(&(process_additional_folder(&1)))
+  end
+
+  defp process_additional_folder(additional_folder) do
+    dest_path = "#{Mix.Project.app_path}/#{additional_folder}"
+    File.mkdir_p! dest_path
+
+    files = H.full_ls "lib/#{additional_folder}"
+
+    for f <- files do
+      :ok = File.cp f, "#{dest_path}/#{Path.basename(f)}"
+    end
   end
 
   # Return all script files' names and full paths. Merging bottler's scripts

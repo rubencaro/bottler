@@ -54,8 +54,15 @@ On your config:
     config :bottler, :params, [servers: [server1: [ip: "1.1.1.1"],
                                          server2: [ip: "1.1.1.2"]],
                                remote_user: "produser",
-                               cookie: "secretcookie" ]
+                               cookie: "secretcookie",
+                               additional_folders: ["docs"] ]
 ```
+
+* `servers` - list of servers to deploy on.
+* `remote_user` - user name to log in.
+* `cookie` - distributed Erlang cookie.
+* `additional_folders` - additional folders to include in the release under
+   the `lib` folder.
 
 Then you can use the tasks like `mix bottler.release`. Take a look at the docs for each task with `mix help <task>`.
 

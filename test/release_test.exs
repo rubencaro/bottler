@@ -3,6 +3,18 @@ require Bottler.Helpers, as: H
 defmodule ReleaseTest do
   use ExUnit.Case, async: false
 
+  setup do
+    extra_dir = "#{Mix.Project.build_path}/../../lib/extras"
+    File.mkdir(extra_dir)
+    :ok = File.write "#{extra_dir}/dummy", ""
+
+    on_exit fn ->
+      File.rm_rf(extra_dir)
+    end
+
+    :ok
+  end
+
   test "release gets generated" do
     vsn = Bottler.Mixfile.project[:version]
     apps = [:bottler,:kernel,:stdlib,:elixir,:logger,:crypto,:sasl,:compiler,
@@ -31,7 +43,7 @@ defmodule ReleaseTest do
 
     # check config term
     assert {:ok,[config_term]} = H.read_terms "rel/sys.config"
-    assert [logger: _, bottler: [params: [servers: _, remote_user: _, cookie: _]]] = config_term
+    assert [logger: _, bottler: [params: [servers: _, remote_user: _, cookie: _, additional_folders: ["extras"]]]] = config_term
 
     # check tar.gz exists and extracts
     assert File.regular?("rel/bottler.tar.gz")
@@ -51,5 +63,6 @@ defmodule ReleaseTest do
     assert libs == (apps ++ iapps) |> Enum.map(&(to_string(&1))) |> Enum.sort
     # scripts too
     assert ["connect.sh","watchdog.sh"] = File.ls!("rel/extracted/lib/bottler-#{vsn}/scripts") |> Enum.sort
+    assert ["dummy"] = File.ls!("rel/extracted/lib/bottler-#{vsn}/extras") |> Enum.sort
   end
 end
