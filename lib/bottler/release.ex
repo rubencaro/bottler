@@ -74,7 +74,7 @@ defmodule Bottler.Release do
   end
 
   defp process_additional_folder(additional_folder) do
-    dest_path = "#{Mix.Project.app_path}/lib/#{additional_folder}"
+    dest_path = "#{Mix.Project.app_path}/#{additional_folder}"
     File.mkdir_p! dest_path
 
     files = H.full_ls "lib/#{additional_folder}"
