@@ -142,6 +142,8 @@ The generated scripts' list is short by now:
 ### master
 
 * Use SSHEx 2.1.0
+* Cookie support
+* `observer` task
 
 ### 0.5.0
 
