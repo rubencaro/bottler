@@ -146,10 +146,10 @@ The generated scripts' list is short by now:
 
 * Use SSHEx 2.1.0
 * Cookie support
+* configurable shipment timeout
 * `observer` task (dev)
 * github shipment support (dev)
 * use shipped Elixir everywhere (no Elixir needed on target) (dev)
-* configurable shipment timeout (dev)
 
 ### 0.5.0
 
