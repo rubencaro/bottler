@@ -143,7 +143,8 @@ The generated scripts' list is short by now:
 
 * Use SSHEx 2.1.0
 * Cookie support
-* `observer` task
+* `observer` task (dev)
+* github shipment support (dev)
 
 ### 0.5.0
 
