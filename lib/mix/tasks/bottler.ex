@@ -171,3 +171,34 @@ defmodule Mix.Tasks.Bottler.HelperScripts do
   end
 
 end
+
+defmodule Mix.Tasks.Bottler.Observer do
+  use Mix.Task
+
+  def run(args) do
+    args |> inspect |> IO.puts
+    H.set_prod_environment
+    c = H.read_and_validate_config
+    c |> inspect |> IO.puts
+    port = get_port(c, args)
+    {:ok, _} = Task.start_link(fn->
+      tunnel_cmd = 'wc /dev/zero'
+      IO.puts "Opening tunnel with '#{tunnel_cmd}'"
+      port = :erlang.open_port({:spawn, tunnel_cmd}, [])
+      pid = :erlang.port_info(port)[:os_pid]
+      IO.puts "Opened tunnel has pid: #{pid}"
+      System.at_exit(fn(_)->
+        IO.puts "Killing pid: #{pid}"
+        cmd = "kill #{pid}" |> to_char_list
+        :os.cmd(cmd)
+      end)
+    end)
+    IO.puts "Waiting for tunnel logic..."
+  end
+
+  defp get_port(c, args) do
+    # cmd = "ssh #{c[:remote_user]}@#{args |> List.first} \"source /home/#{c[:remote_user]}/.bash_profile && epmd -names\" | grep dean | cut -d \" \" -f 5"
+    cmd = "ssh epdp@#{args |> List.first} \"source /home/epdp/.bash_profile && epmd -names\" | grep dean | cut -d \" \" -f 5"
+    :os.cmd(cmd |> to_char_list) |> to_string |> String.strip(?\n)
+  end
+end
