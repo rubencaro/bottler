@@ -145,6 +145,7 @@ The generated scripts' list is short by now:
 * Cookie support
 * `observer` task (dev)
 * github shipment support (dev)
+* use shipped Elixir everywhere (no Elixir needed on target) (dev)
 
 ### 0.5.0
 
