@@ -85,7 +85,8 @@ defmodule Bottler.Helpers do
   def read_and_validate_config do
     c = [ scripts_folder: ".bottler/scripts",
           into_path_folder: "~/.local/bin",
-          remote_port: 22 ]
+          remote_port: 22,
+          additional_folders: [] ]
         |> K.merge(Application.get_env(:bottler, :params))
 
     L.debug inspect(c)
