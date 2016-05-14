@@ -55,7 +55,8 @@ On your config:
                                          server2: [ip: "1.1.1.2"]],
                                remote_user: "produser",
                                cookie: "secretcookie",
-                               additional_folders: ["docs"] ]
+                               additional_folders: ["docs"],
+                               ship: [timeout: 60_000] ]
 ```
 
 * `servers` - list of servers to deploy on.
@@ -63,6 +64,8 @@ On your config:
 * `cookie` - distributed Erlang cookie.
 * `additional_folders` - additional folders to include in the release under
    the `lib` folder.
+* `ship` - options for the `ship` task
+  * `timeout` - timeout millis for shipment through scp, defaults to 60_000
 
 Then you can use the tasks like `mix bottler.release`. Take a look at the docs for each task with `mix help <task>`.
 
@@ -146,6 +149,7 @@ The generated scripts' list is short by now:
 * `observer` task (dev)
 * github shipment support (dev)
 * use shipped Elixir everywhere (no Elixir needed on target) (dev)
+* configurable shipment timeout (dev)
 
 ### 0.5.0
 

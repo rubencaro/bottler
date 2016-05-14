@@ -86,7 +86,8 @@ defmodule Bottler.Helpers do
     c = [ scripts_folder: ".bottler/scripts",
           into_path_folder: "~/.local/bin",
           remote_port: 22,
-          additional_folders: [] ]
+          additional_folders: [],
+          ship: [] ]
         |> K.merge(Application.get_env(:bottler, :params))
 
     L.debug inspect(c)
