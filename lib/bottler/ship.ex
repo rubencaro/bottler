@@ -15,7 +15,7 @@ defmodule Bottler.Ship do
     L.info "Shipping to #{config[:servers] |> Keyword.keys |> Enum.join(",")}..."
 
     ship_config = [ timeout: 60_000 ]
-                  |> K.merge(config[:ship])
+                  |> Keyword.merge(config[:ship])
 
     app = Mix.Project.get!.project[:app]
     config[:servers] |> Keyword.values |> H.in_tasks( fn(args) ->
