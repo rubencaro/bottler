@@ -16,11 +16,10 @@
 
 app="<%= app %>"
 cookie="<%= cookie %>"
-dir="/home/$user/$app/current"
 
 
 # connect with interactive erlang via iex
-cmd="erl -env ERL_LIBS $dir/lib -name connector@127.0.0.1 -remsh $app@127.0.0.1 -setcookie $cookie"
+cmd="erl -name connector@127.0.0.1 -remsh $app@127.0.0.1 -setcookie $cookie"
 $cmd
 
 ########################################
