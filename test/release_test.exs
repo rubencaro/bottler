@@ -62,7 +62,7 @@ defmodule ReleaseTest do
     end |> Enum.sort
     assert libs == (apps ++ iapps) |> Enum.map(&(to_string(&1))) |> Enum.sort
     # scripts too
-    assert ["connect.sh","watchdog.sh"] = File.ls!("rel/extracted/lib/bottler-#{vsn}/scripts") |> Enum.sort
+    assert ["connect.sh","erl_connect.sh","watchdog.sh"] = File.ls!("rel/extracted/lib/bottler-#{vsn}/scripts") |> Enum.sort
     assert ["dummy"] = File.ls!("rel/extracted/lib/bottler-#{vsn}/extras") |> Enum.sort
   end
 end
