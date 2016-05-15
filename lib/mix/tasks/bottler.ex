@@ -177,23 +177,68 @@ defmodule Mix.Tasks.Bottler.Observer do
 
   def run(args) do
     args |> inspect |> IO.puts
+
     H.set_prod_environment
     c = H.read_and_validate_config
     c |> inspect |> IO.puts
     port = get_port(c, args)
-    {:ok, _} = Task.start_link(fn->
-      tunnel_cmd = 'wc /dev/zero'
-      IO.puts "Opening tunnel with '#{tunnel_cmd}'"
-      port = :erlang.open_port({:spawn, tunnel_cmd}, [])
-      pid = :erlang.port_info(port)[:os_pid]
-      IO.puts "Opened tunnel has pid: #{pid}"
-      System.at_exit(fn(_)->
-        IO.puts "Killing pid: #{pid}"
-        cmd = "kill #{pid}" |> to_char_list
-        :os.cmd(cmd)
-      end)
-    end)
-    IO.puts "Waiting for tunnel logic..."
+    IO.puts port
+
+    ip = args |> List.first
+
+    # auto closing tunnel
+    :os.cmd('killall epmd') # free distributed erlang port
+    cmd = "ssh -f -L 4369:localhost:4369 -L #{port}:localhost:#{port} epdp@#{ip} sleep 30;" |> to_char_list
+    IO.puts cmd
+    :os.cmd(cmd)
+
+    # observer
+    # cmd = "erl -name observerunique@127.0.0.1 -setcookie monikako -run observer -nohalt &" |> to_char_list
+    cmd = "elixir --name observerunique@127.0.0.1 --cookie monikako --no-halt lib/mix/scripts/observer.exs" |> to_char_list
+    :os.cmd(cmd)
+    # observer_pid = :os.cmd('pgrep -f observerunique')
+    # port = :erlang.open_port({:spawn, cmd}, [])
+    # port = :erlang.open_port({:spawn_executable, 'erl'}, [{:args, ['-name', 'observer@127.0.0.1', '-setcookie', 'monikako', '-run', 'observer', '-nohalt']}])
+    # observer_pid = :erlang.port_info(port)[:os_pid]
+
+    # :timer.sleep 5_000
+
+    # t = Task.async(fn-> wait_for_observer_to_end() end) |> Task.await
+    # IO.puts "Now kill observer pid #{observer_pid}"
+    # :os.cmd("kill #{observer_pid}" |> to_char_list)
+
+    #
+    # Mix.Task.run "run", ["lib/mix/scripts/observer.exs", "--no-halt", port] ++ args
+    #
+    # cmd = "ssh -f -L 4369:localhost:4369 -L #{port}:localhost:#{port} epdp@#{args |> List.first} sleep 30"
+    # IO.puts cmd
+    # :os.cmd('erl -name observer@127.0.0.1 -setcookie monikako -run observer')
+
+    # {:ok, _} = Task.start_link(fn->
+    #   tunnel_cmd = 'wc /dev/zero'
+    #   IO.puts "Opening tunnel with '#{tunnel_cmd}'"
+    #   port = :erlang.open_port({:spawn, tunnel_cmd}, [])
+    #   pid = :erlang.port_info(port)[:os_pid]
+    #   IO.puts "Opened tunnel has pid: #{pid}"
+    #   System.at_exit(fn(_)->
+    #     IO.puts "Killing pid: #{pid}"
+    #     cmd = "kill #{pid}" |> to_char_list
+    #     :os.cmd(cmd)
+    #   end)
+    # end)
+    # IO.puts "Waiting for tunnel logic..."
+    IO.puts "Done"
+  end
+
+  defp wait_for_observer_to_end do
+    IO.puts "."
+    try do
+      :observer_wx.get_attrib({:font, :fixed})
+      :timer.sleep 2_000
+      wait_for_observer_to_end
+    rescue
+      x in [ErlangError] -> x |> inspect |> IO.puts
+    end
   end
 
   defp get_port(c, args) do
