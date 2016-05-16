@@ -110,7 +110,7 @@ defmodule Bottler.Helpers do
           ship: [] ]
         |> K.merge(Application.get_env(:bottler, :params))
 
-    L.debug inspect(c)
+    # L.debug inspect(c)
 
     if not K.keyword?(c[:servers]),
       do: raise ":bottler :servers should be a keyword list, it was #{inspect c[:servers]}"
