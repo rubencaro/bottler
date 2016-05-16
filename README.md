@@ -149,9 +149,9 @@ The generated scripts' list is short by now:
 * configurable shipment timeout
 * `erl_connect` (no Elixir needed on target)
 * `bottler.observer` task
-* `bottler.exec` task (dev)
+* `bottler.exec` task
+* remote_scp shipment support
 * log erts versions on both sides (dev)
-* inter-server shipment support (dev)
 
 ### 0.5.0
 
