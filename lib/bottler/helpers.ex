@@ -4,6 +4,19 @@ alias Keyword, as: K
 defmodule Bottler.Helpers do
 
   @doc """
+    Parses given args using OptionParser with given opts.
+    Raises ArgumentError if any unknown argument found.
+  """
+  def parse_args!(args, opts) do
+    {switches, remaining_args, unknown} = OptionParser.parse(args, opts)
+
+    case unknown do
+      [] -> {switches, remaining_args}
+      x -> raise ArgumentError, message: "Unknown arguments: #{inspect x}"
+    end
+  end
+
+  @doc """
     Convenience to get environment bits. Avoid all that repetitive
     `Application.get_env( :myapp, :blah, :blah)` noise.
   """
