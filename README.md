@@ -87,10 +87,10 @@ Ship a release file to configured remote servers.
 Use like `mix bottler.ship`.
 
 You can configure some things about it, under the _ship_ section:
-*__timeout__: The timeout that applies to the upload process. 
-*__method__: One of:
-  *__scp__: Straight _scp_ from the local machine to every target server.
-  *__remote_scp__: Upload the release only once from your local machine to the first configured server, and then _scp_ remotely to every other target. 
+* __timeout__: The timeout that applies to the upload process. 
+* __method__: One of:
+  * __scp__: Straight _scp_ from the local machine to every target server.
+  * __remote_scp__: Upload the release only once from your local machine to the first configured server, and then _scp_ remotely to every other target. 
 
 ## Install
 
