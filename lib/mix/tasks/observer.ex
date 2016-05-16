@@ -1,5 +1,4 @@
 require Bottler.Helpers, as: H
-alias Bottler, as: B
 
 defmodule Mix.Tasks.Bottler.Observer do
   use Mix.Task

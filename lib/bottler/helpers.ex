@@ -4,6 +4,13 @@ alias Keyword, as: K
 defmodule Bottler.Helpers do
 
   @doc """
+    Convenience to get environment bits. Avoid all that repetitive
+    `Application.get_env( :myapp, :blah, :blah)` noise.
+  """
+  def env(key, default \\ nil), do: env(:bottler, key, default)
+  def env(app, key, default), do: Application.get_env(app, key, default)
+
+  @doc """
     Run given function in different Tasks. One `Task` for each entry on given
     list. Each entry on list will be given as args for the function.
 
@@ -132,6 +139,43 @@ defmodule Bottler.Helpers do
 
       unquote(obj)
     end
+  end
+
+  @doc """
+    Print to stdout a _TODO_ message, with location information.
+  """
+  defmacro todo(msg \\ "") do
+    quote do
+      %{file: file, line: line} = __ENV__
+      [ :yellow, "\nTODO: #{file}:#{line} #{unquote(msg)}\n", :reset]
+      |> IO.ANSI.format(true)
+      |> IO.puts
+      :todo
+    end
+  end
+
+  @doc """
+    Apply given defaults to given Keyword. Returns merged Keyword.
+
+    The inverse of `Keyword.merge`, best suited to apply some defaults in a
+    chainable way.
+
+    Ex:
+      kw = gather_data
+        |> transform_data
+        |> H.defaults(k1: 1234, k2: 5768)
+        |> here_i_need_defaults
+
+    Instead of:
+      kw1 = gather_data
+        |> transform_data
+      kw = [k1: 1234, k2: 5768]
+        |> Keyword.merge(kw1)
+        |> here_i_need_defaults
+
+  """
+  def defaults(args, defs) do
+    defs |> Keyword.merge(args)
   end
 
   @doc """

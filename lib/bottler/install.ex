@@ -39,7 +39,7 @@ defmodule Bottler.Install do
 
   # Decompress release file, put it in place, and make needed movements
   #
-  defp place_files(conn, user, ip, additional_folders \\ []) do
+  defp place_files(conn, user, ip, additional_folders) do
     L.info "Settling files on #{ip}..."
     vsn = Mix.Project.get!.project[:version]
     app = Mix.Project.get!.project[:app]
