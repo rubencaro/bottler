@@ -20,6 +20,8 @@ are using [Harakiri](http://github.com/rubencaro/harakiri).
 * __deploy__: _release_, _ship_, _install_ and then _restart_.
 * __rollback__: quick _restart_ on a previous release.
 * __helper_scripts__: generate some helper scripts based on project config.
+* __observer__: opens an observer window connected to given server.
+* __exec__: runs given command on every server, showing their outputs.
 
 You should have public key ssh access to all servers you intend to work with.
 Erlang runtime should be installed there too. Everything else, including Elixir
@@ -56,7 +58,8 @@ On your config:
                                remote_user: "produser",
                                cookie: "secretcookie",
                                additional_folders: ["docs"],
-                               ship: [timeout: 60_000] ]
+                               ship: [timeout: 60_000,
+                                      method: :scp] ]
 ```
 
 * `servers` - list of servers to deploy on.
@@ -66,6 +69,7 @@ On your config:
    the `lib` folder.
 * `ship` - options for the `ship` task
   * `timeout` - timeout millis for shipment through scp, defaults to 60_000
+  * `method` - method of shipment, one of (`:scp`, `:remote_scp`, etc..)
 
 Then you can use the tasks like `mix bottler.release`. Take a look at the docs for each task with `mix help <task>`.
 
@@ -123,6 +127,14 @@ The generated scripts' list is short by now:
 
 * A `<project>_<server>` script for each target server configured. That script will open an SSH session with this server. When you want to access one of your production servers, the one that is called `daisy42`, for the project called `motion`, then you can invoke `motion_daisy42` on any terminal and it will open up an SSH shell for you.
 
+## Observer
+
+Use like `mix bottler.observer server1`
+
+## Exec
+
+Use like `mix bottler.exec 'ls -alt some/path'`
+
 ## TODOs
 
 * Add more testing
@@ -151,7 +163,7 @@ The generated scripts' list is short by now:
 * `bottler.observer` task
 * `bottler.exec` task
 * remote_scp shipment support
-* log erts versions on both sides (dev)
+* log erts versions on both sides
 
 ### 0.5.0
 
