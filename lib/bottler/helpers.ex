@@ -227,4 +227,28 @@ defmodule Bottler.Helpers do
     File.rm_rf! path
     File.mkdir_p! path
   end
+
+  @doc """
+    Log local and remote versions of erts
+  """
+  def log_erts_versions(config) do
+    :ssh.start # just in case
+
+    local_release = :erlang.system_info(:version) |> to_string
+
+    task_opts = [expected: local_release, to_s: false]
+
+    {sign, remote_releases} = config[:servers] |> K.values
+      |> in_tasks( fn(args)->
+        user = config[:remote_user] |> to_char_list
+        ip = args[:ip] |> to_char_list
+        {:ok, conn} = SSHEx.connect(ip: ip, user: user)
+        cmd = "source ~/.bash_profile && erl -eval 'erlang:display(erlang:system_info(version)), halt().'  -noshell" |> to_char_list
+        SSHEx.cmd!(conn, cmd) |> String.replace(~r/[\n\r\\"]/, "")
+      end, task_opts)
+
+    level = if sign == :ok, do: :info, else: :error
+
+    L.log level, "Compiling against Erlang/OTP release #{local_release}. Remote releases are #{Enum.map_join(remote_releases, ",", &(&1))}."
+  end
 end
