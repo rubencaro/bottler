@@ -131,9 +131,13 @@ The generated scripts' list is short by now:
 
 Use like `mix bottler.observer server1`
 
+It takes the ip of the given server from configuration, then opens a double SSH tunnel with its epmd service and its application node. Then executes an elixir script which spawns an observer window locally, connected with the tunnelled node. You just need to select the remote node from the _Nodes_ menu.
+
 ## Exec
 
 Use like `mix bottler.exec 'ls -alt some/path'`
+
+It runs the given command through parallel SSH connections with all the configured servers. It accepts an optional _--timeout_ parameter. 
 
 ## TODOs
 
