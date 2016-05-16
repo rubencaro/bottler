@@ -15,7 +15,7 @@ defmodule Bottler.Release do
     :ok = H.cmd "MIX_ENV=#{env} mix deps.get"
     :ok = H.cmd "MIX_ENV=#{env} mix compile"
 
-    if env == :prod, do: H.log_erts_versions(config)
+    if env == "prod", do: H.log_erts_versions(config)
 
     L.info "Generating release tar.gz ..."
     File.rm_rf! "rel"
