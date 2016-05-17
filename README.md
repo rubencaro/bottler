@@ -19,9 +19,9 @@ including the whole `erts` by now).
 are using [Harakiri](http://github.com/rubencaro/harakiri).
 * __deploy__: _release_, _ship_, _install_ and then _restart_.
 * __rollback__: quick _restart_ on a previous release.
-* __helper_scripts__: generate some helper scripts based on project config.
 * __observer__: opens an observer window connected to given server.
 * __exec__: runs given command on every server, showing their outputs.
+* __goto__: opens an SSH session with a server on a new terminal window.
 
 You should have public key ssh access to all servers you intend to work with.
 Erlang runtime should be installed there too. Everything else, including Elixir
@@ -124,18 +124,6 @@ It's up to you to keep all your servers rollback-able (yeah).
 
 Use like `mix bottler.rollback`.
 
-## Helper Scripts
-
-This generates some helper scripts using project's current config information, such as target servers. You can run this task repeatedly to force regeneration of these scripts to reflect config changes.
-
-Generated scripts are located under `<project>/.bottler/scripts` (configurable via `scripts_folder`). It will also generate links to those scripts on a configurable folder to add them to your system PATH. The configuration param is `into_path_folder`. Its default value is `~/local/bin`.
-
-Use like `mix bottler.helper_scripts`.
-
-The generated scripts' list is short by now:
-
-* A `<project>_<server>` script for each target server configured. That script will open an SSH session with this server. When you want to access one of your production servers, the one that is called `daisy42`, for the project called `motion`, then you can invoke `motion_daisy42` on any terminal and it will open up an SSH shell for you.
-
 ## Observer
 
 Use like `mix observer server1`
@@ -154,8 +142,24 @@ Use like `mix goto server1`
 
 It opens an SSH session on a new terminal window on the server with given name. The actual `terminal` command can be configured as a template.
 
+## GCE support
+
+Whenever you can use Google's `gcloud` from your computer (i.e. authenticate and see if it works), you can configure `bottler` to use it too to get your instances IP addresses. Instead of:
+
+```elixir
+    servers: [server1: [ip: "1.1.1.1"],
+              server2: [ip: "1.1.1.2"]]
+```
+
+You just do:
+```elixir
+    servers: [gce_project: "project-id"]
+```
+When you perform an operation on a server, its ip will be obtained using `gcloud` command. You don't need to reserve more static IP addresses for your instances.
+
 ## TODOs
 
+* Options to filter target servers from command line (dev)
 * Add more testing
 * Separate section for documenting every configuration option
 * Get it stable on production
@@ -163,7 +167,6 @@ It opens an SSH session on a new terminal window on the server with given name. 
 * Complete README
 * Rollback to _any_ previous version
 * Optionally include `erts` (now we can ship openssl too see [here](http://www.erlang.org/download/otp_src_17.4.readme))
-* Use scalable middleplace to ship releases [*](notes/scalable_shipment.md)
 * Allow hot code swap (just follow [this](http://erlang.org/doc/design_principles/release_handling.html) to prepare the release, and then provide an example of [Harakiri](http://github.com/rubencaro/harakiri) action that actually performs the upgrade)
 * Support for hooks
 * Add tools for docker deploys
@@ -173,16 +176,16 @@ It opens an SSH session on a new terminal window on the server with given name. 
 
 ### master
 
-* Add support for deploy to GCE instances (dev)
-* Options to filter target servers from command line (dev)
+* Add support for deploy to GCE instances
+* remove `helper_scripts` task
 * `goto` task
 * Use SSHEx 2.1.0
 * Cookie support
 * configurable shipment timeout
 * `erl_connect` (no Elixir needed on target)
-* `bottler.observer` task
+* `observer` task
 * `bottler.exec` task
-* remote_scp shipment support
+* `remote_scp` shipment support
 * log erts versions on both sides
 
 ### 0.5.0
@@ -195,7 +198,7 @@ It opens an SSH session on a new terminal window on the server with given name. 
 
 ### 0.4.0
 
-* Use [SSHEx](https://github.com/elpulgardelpanda/sshex)
+* Use [SSHEx](https://github.com/rubencaro/sshex)
 * Add __helper_scripts__
 
 ### 0.3.0

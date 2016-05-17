@@ -4,19 +4,24 @@ defmodule Mix.Tasks.Observer do
   use Mix.Task
 
   def run(args) do
-    name = args |> List.first |> String.to_existing_atom
+    name = args |> List.first |> String.to_atom
 
     H.set_prod_environment
     c = H.read_and_validate_config
     c |> inspect |> IO.puts
 
-    ip = c[:servers][name][:ip]
+    servers = H.guess_server_list(c)
+
+    if not name in Keyword.keys(servers),
+      do: raise "Server not found by that name"
+
+    ip = servers[name][:ip]
     port = get_port(c, ip)
 
     # auto closing tunnel
     :os.cmd('killall epmd') # free distributed erlang port
     cmd = "ssh -f -L 4369:localhost:4369 -L #{port}:localhost:#{port} #{c[:remote_user]}@#{ip} sleep 30;" |> to_char_list
-    IO.puts "Opening tunnel: #{cmd}"
+    IO.puts "Opening tunnel... \n#{cmd}"
     :os.cmd(cmd) |> to_string |> IO.puts
 
     # observer

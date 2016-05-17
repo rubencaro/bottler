@@ -10,7 +10,6 @@ defmodule Bottler do
   defdelegate install(config), to: Bottler.Install
   defdelegate restart(config), to: Bottler.Restart
   defdelegate rollback(config), to: Bottler.Rollback
-  defdelegate helper_scripts(config), to: Bottler.HelperScripts
   defdelegate exec(config, cmd, switches), to: Bottler.Exec
 
 end

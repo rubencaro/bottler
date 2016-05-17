@@ -18,7 +18,7 @@ defmodule Bottler.Install do
   """
   def install(config) do
     :ssh.start # sometimes it's not already started at this point...
-    config[:servers] |> Keyword.values # each ip
+    config |> H.guess_server_list |> Keyword.values # each ip
     |> Enum.map(fn(s) -> s ++ [ user: config[:remote_user], additional_folders: config[:additional_folders] ] end) # add user, additional folders
     |> H.in_tasks( fn(args) -> on_server(args) end )
   end

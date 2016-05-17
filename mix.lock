@@ -1,1 +1,3 @@
-%{"sshex": {:hex, :sshex, "2.1.0", "943489f576978db0936d9714966bf06e615550c7b787492ce7a0bd4469c0ac7f", [:mix], []}}
+%{"csv": {:hex, :csv, "1.4.0", "79d9ecb949b27bcc2b5a03798b5d71fa81940d99fcf0d96ac2068e5ef29adac0", [:mix], [{:parallel_stream, "~> 1.0.3", [hex: :parallel_stream, optional: false]}]},
+  "parallel_stream": {:hex, :parallel_stream, "1.0.3", "773ee166669eb21b5297ce41b3c7b474be096eb8ed052d457081289a1cf2507a", [:mix], []},
+  "sshex": {:hex, :sshex, "2.1.0", "943489f576978db0936d9714966bf06e615550c7b787492ce7a0bd4469c0ac7f", [:mix], []}}

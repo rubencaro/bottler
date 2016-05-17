@@ -2,8 +2,6 @@ require Logger, as: L
 require Bottler.Helpers, as: H
 
 defmodule Bottler.Rollback do
-  alias Bottler.SSH
-
   @moduledoc """
     Simply move the _current_ link to the previous release and restart to
     apply. It's also possible to deploy a previous release, but this is
@@ -19,7 +17,7 @@ defmodule Bottler.Rollback do
   """
   def rollback(config) do
     :ssh.start
-    {:ok, _} = config[:servers] |> Keyword.values # each ip
+    {:ok, _} = config |> H.guess_server_list |> Keyword.values # each ip
     |> Enum.map(fn(s) -> s ++ [ user: config[:remote_user] ] end) # add user
     |> H.in_tasks( fn(args) -> on_server(args) end )
 
@@ -42,13 +40,13 @@ defmodule Bottler.Rollback do
 
   defp get_previous_release(conn, user) do
     app = Mix.Project.get!.project[:app]
-    {:ok, res, 0} = SSH.run conn, 'ls -t /home/#{user}/#{app}/releases'
+    {:ok, res, 0} = SSHEx.run conn, 'ls -t /home/#{user}/#{app}/releases'
     res |> String.split |> Enum.at(1)
   end
 
   defp shift_current(conn, user, vsn) do
     app = Mix.Project.get!.project[:app]
-    {:ok, _, 0} = SSH.run conn,
+    {:ok, _, 0} = SSHEx.run conn,
                             'ln -sfn /home/#{user}/#{app}/releases/#{vsn} ' ++
                             ' /home/#{user}/#{app}/current'
   end

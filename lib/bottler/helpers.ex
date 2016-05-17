@@ -111,16 +111,55 @@ defmodule Bottler.Helpers do
           goto: [terminal: "terminator -T '<%= title %>' -e '<%= command %>' &"] ]
         |> K.merge(Application.get_env(:bottler, :params))
 
-    # L.debug inspect(c)
-
-    if not K.keyword?(c[:servers]),
-      do: raise ":bottler :servers should be a keyword list, it was #{inspect c[:servers]}"
-    if not Enum.all?(c[:servers], fn({_,v})-> :ip in K.keys(v) end),
+    if not is_valid_servers_list?(c[:servers]),
       do: raise ":bottler :servers should look like \n" <>
                 "    [srvname: [ip: '' | rest ] | rest ]\n" <>
-                "but was\n    #{inspect c[:servers]}"
+                "or [gce_project: \"project-id\"]\n" <>
+                "but it was\n    #{inspect c[:servers]}"
 
     c
+  end
+
+  defp is_valid_servers_list?(s) do
+    K.keyword?(s) and ( is_gce_servers?(s) or is_default_servers?(s) )
+  end
+
+  defp is_default_servers?(s),
+    do: Enum.all?(s, fn({_,v})-> :ip in K.keys(v) end)
+
+  defp is_gce_servers?(s),
+    do: match?(%{gce_project: _} , Enum.into(s,%{}))
+
+  defp get_servers_type(s) do
+    case is_gce_servers?(s) do
+      true -> :gce
+      false -> case is_default_servers?(s) do
+        true -> :default
+        false -> :none
+      end
+    end
+  end
+
+  @doc """
+    Return the server list, whatever its type is.
+    Raises an error if it's not recognised.
+  """
+  def guess_server_list(config) do
+    case get_servers_type(config[:servers]) do
+      :default -> config[:servers]  # explicit, non GCE
+      :gce -> get_gce_server_list(config)
+      :none -> raise "Server list specification not recognised: '#{inspect config[:servers]}'"
+    end
+  end
+
+  defp get_gce_server_list(config) do
+    L.info "Getting server list from GCE..."
+
+    config
+    |> Bottler.Helpers.GCE.instances
+    |> Enum.map(fn(i)->
+      {i["NAME"] |> String.to_atom, [ip: i["EXTERNAL_IP"]]}
+    end)
   end
 
   @doc """
@@ -239,7 +278,7 @@ defmodule Bottler.Helpers do
 
     task_opts = [expected: local_release, to_s: false]
 
-    {sign, remote_releases} = config[:servers] |> K.values
+    {sign, remote_releases} = config |> guess_server_list |> K.values
       |> in_tasks( fn(args)->
         user = config[:remote_user] |> to_char_list
         ip = args[:ip] |> to_char_list

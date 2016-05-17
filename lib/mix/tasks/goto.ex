@@ -1,5 +1,4 @@
 require Bottler.Helpers, as: H
-alias Bottler, as: B
 
 defmodule Mix.Tasks.Goto do
 
@@ -16,12 +15,17 @@ defmodule Mix.Tasks.Goto do
   use Mix.Task
 
   def run(args) do
-    name = args |> List.first |> String.to_existing_atom
+    name = args |> List.first |> String.to_atom
 
     H.set_prod_environment
     c = H.read_and_validate_config
 
-    ip = c[:servers][name][:ip]
+    servers = H.guess_server_list(c)
+
+    if not name in Keyword.keys(servers),
+      do: raise "Server not found by that name"
+
+    ip = servers[name][:ip]
 
     c[:goto][:terminal]
     |> EEx.eval_string(title: "#{name}", command: "ssh #{c[:remote_user]}@#{ip}")
