@@ -107,7 +107,8 @@ defmodule Bottler.Helpers do
           into_path_folder: "~/.local/bin",
           remote_port: 22,
           additional_folders: [],
-          ship: [] ]
+          ship: [],
+          goto: [terminal: "terminator -T '<%= title %>' -e '<%= command %>' &"] ]
         |> K.merge(Application.get_env(:bottler, :params))
 
     # L.debug inspect(c)

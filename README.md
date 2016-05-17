@@ -59,7 +59,8 @@ On your config:
                                cookie: "secretcookie",
                                additional_folders: ["docs"],
                                ship: [timeout: 60_000,
-                                      method: :scp] ]
+                                      method: :scp],
+                               goto: [terminal: "terminator -T '<%= title %>' -e '<%= command %>'"] ]
 ```
 
 * `servers` - list of servers to deploy on.
@@ -70,6 +71,8 @@ On your config:
 * `ship` - options for the `ship` task
   * `timeout` - timeout millis for shipment through scp, defaults to 60_000
   * `method` - method of shipment, one of (`:scp`, `:remote_scp`, etc..)
+* `goto` - options for the `goto` task
+  * `terminal` - template for the actual terminal command
 
 Then you can use the tasks like `mix bottler.release`. Take a look at the docs for each task with `mix help <task>`.
 
@@ -87,10 +90,10 @@ Ship a release file to configured remote servers.
 Use like `mix bottler.ship`.
 
 You can configure some things about it, under the _ship_ section:
-* __timeout__: The timeout that applies to the upload process. 
+* __timeout__: The timeout that applies to the upload process.
 * __method__: One of:
   * __scp__: Straight _scp_ from the local machine to every target server.
-  * __remote_scp__: Upload the release only once from your local machine to the first configured server, and then _scp_ remotely to every other target. 
+  * __remote_scp__: Upload the release only once from your local machine to the first configured server, and then _scp_ remotely to every other target.
 
 ## Install
 
@@ -135,7 +138,7 @@ The generated scripts' list is short by now:
 
 ## Observer
 
-Use like `mix bottler.observer server1`
+Use like `mix observer server1`
 
 It takes the ip of the given server from configuration, then opens a double SSH tunnel with its epmd service and its application node. Then executes an elixir script which spawns an observer window locally, connected with the tunnelled node. You just need to select the remote node from the _Nodes_ menu.
 
@@ -143,14 +146,19 @@ It takes the ip of the given server from configuration, then opens a double SSH 
 
 Use like `mix bottler.exec 'ls -alt some/path'`
 
-It runs the given command through parallel SSH connections with all the configured servers. It accepts an optional _--timeout_ parameter. 
+It runs the given command through parallel SSH connections with all the configured servers. It accepts an optional _--timeout_ parameter.
+
+## Goto
+
+Use like `mix goto server1`
+
+It opens an SSH session on a new terminal window on the server with given name. The actual `terminal` command can be configured as a template.
 
 ## TODOs
 
 * Add more testing
 * Separate section for documenting every configuration option
 * Get it stable on production
-* Options to filter target servers from command line
 * Wait until _current_ release is seen running.
 * Complete README
 * Rollback to _any_ previous version
@@ -160,12 +168,14 @@ It runs the given command through parallel SSH connections with all the configur
 * Support for hooks
 * Add tools for docker deploys
 * Add support for deploy to AWS instances [*](https://github.com/gleber/erlcloud)[*](notes/aws.md)
-* Add support for deploy to GCE instances
 
 ## Changelog
 
 ### master
 
+* Add support for deploy to GCE instances (dev)
+* Options to filter target servers from command line (dev)
+* `goto` task
 * Use SSHEx 2.1.0
 * Cookie support
 * configurable shipment timeout

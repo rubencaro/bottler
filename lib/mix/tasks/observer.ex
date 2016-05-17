@@ -1,11 +1,9 @@
 require Bottler.Helpers, as: H
 
-defmodule Mix.Tasks.Bottler.Observer do
+defmodule Mix.Tasks.Observer do
   use Mix.Task
 
   def run(args) do
-    args |> inspect |> IO.puts
-
     name = args |> List.first |> String.to_existing_atom
 
     H.set_prod_environment
