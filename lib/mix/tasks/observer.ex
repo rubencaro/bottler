@@ -1,4 +1,5 @@
 require Bottler.Helpers, as: H
+require Logger, as: L
 
 defmodule Mix.Tasks.Observer do
   use Mix.Task
@@ -7,15 +8,14 @@ defmodule Mix.Tasks.Observer do
     name = args |> List.first |> String.to_atom
 
     H.set_prod_environment
-    c = H.read_and_validate_config
-    c |> inspect |> IO.puts
+    c = H.read_and_validate_config |> H.inline_resolve_servers
 
-    servers = H.guess_server_list(c)
-
-    if not name in Keyword.keys(servers),
+    if not name in Keyword.keys(c[:servers]),
       do: raise "Server not found by that name"
 
-    ip = servers[name][:ip]
+    ip = c[:servers][name][:ip]
+    L.info "Target IP: #{ip}"
+
     port = get_port(c, ip)
 
     # auto closing tunnel

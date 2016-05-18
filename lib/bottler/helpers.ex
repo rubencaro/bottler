@@ -152,6 +152,14 @@ defmodule Bottler.Helpers do
     end
   end
 
+  @doc """
+    Returns a copy of given config with the servers list well formed.
+    It calls `guess_server_list` to get it.
+  """
+  def inline_resolve_servers(config) do
+    config |> Keyword.put(:servers, guess_server_list(config))
+  end
+
   defp get_gce_server_list(config) do
     L.info "Getting server list from GCE..."
 
@@ -276,19 +284,19 @@ defmodule Bottler.Helpers do
 
     local_release = :erlang.system_info(:version) |> to_string
 
-    task_opts = [expected: local_release, to_s: false]
-
-    {sign, remote_releases} = config |> guess_server_list |> K.values
+    {_, remote_releases} = config[:servers] |> K.values
       |> in_tasks( fn(args)->
         user = config[:remote_user] |> to_char_list
         ip = args[:ip] |> to_char_list
         {:ok, conn} = SSHEx.connect(ip: ip, user: user)
         cmd = "source ~/.bash_profile && erl -eval 'erlang:display(erlang:system_info(version)), halt().'  -noshell" |> to_char_list
-        SSHEx.cmd!(conn, cmd) |> String.replace(~r/[\n\r\\"]/, "")
-      end, task_opts)
+        SSHEx.cmd!(conn, cmd)
+        |> String.replace(~r/[\n\r\\"]/, "")
+        |> Kernel.<>(" on #{ip}")
+      end, to_s: false)
 
-    level = if sign == :ok, do: :info, else: :error
+    level = if Enum.all?(remote_releases, &( local_release == &1 |> String.split(" ") |> List.first )), do: :info, else: :error
 
-    L.log level, "Compiling against Erlang/OTP release #{local_release}. Remote releases are #{Enum.map_join(remote_releases, ",", &(&1))}."
+    L.log level, "Compiling against Erlang/OTP release #{local_release}. Remote releases are #{Enum.map_join(remote_releases, ", ", &(&1))}."
   end
 end

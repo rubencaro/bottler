@@ -9,6 +9,7 @@
 app="<%= app %>"
 user="<%= user %>"
 cookie="<%= cookie %>"
+name="$(hostname)"
 dir="/home/$user/$app/current"
 log="$dir/log/$app.log"
 touch $log # ensure existence
@@ -24,7 +25,7 @@ touch $alive # ensure existence
 
 # start in an erlang VM
 cmd="erl -boot $dir/boot/start -config $dir/boot/sys -env ERL_LIBS $dir/lib"
-cmd="$cmd -name $app@127.0.0.1 -setcookie $cookie -noshell"
+cmd="$cmd -name $app_at_$name@127.0.0.1 -setcookie $cookie -noshell"
 
 echo "$(date) Running: $cmd" >> $log
 

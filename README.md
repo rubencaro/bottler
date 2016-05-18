@@ -176,6 +176,7 @@ When you perform an operation on a server, its ip will be obtained using `gcloud
 
 ### master
 
+* Resolve server ips only once
 * Add support for deploy to GCE instances
 * remove `helper_scripts` task
 * `goto` task

@@ -17,7 +17,7 @@ defmodule Bottler.Rollback do
   """
   def rollback(config) do
     :ssh.start
-    {:ok, _} = config |> H.guess_server_list |> Keyword.values # each ip
+    {:ok, _} = config[:servers] |> Keyword.values # each ip
     |> Enum.map(fn(s) -> s ++ [ user: config[:remote_user] ] end) # add user
     |> H.in_tasks( fn(args) -> on_server(args) end )
 

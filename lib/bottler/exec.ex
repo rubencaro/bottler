@@ -16,7 +16,7 @@ defmodule Bottler.Exec do
   def exec(config, cmd, switches) do
     :ssh.start # sometimes it's not already started at this point...
 
-    config |> H.guess_server_list |> Keyword.values # each ip
+    config[:servers] |> Keyword.values # each ip
     |> Enum.map(fn(s) -> s ++ [ user: config[:remote_user] ] end) # add user
     |> Enum.map(fn(s) -> s ++ [ cmd: cmd, switches: switches ] end) # add cmd and switches
     |> H.in_tasks( fn(args) -> on_server(args) end )

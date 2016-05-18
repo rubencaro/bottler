@@ -17,7 +17,7 @@ defmodule Mix.Tasks.Deploy do
 
   def run(_args) do
     H.set_prod_environment
-    c = H.read_and_validate_config
+    c = H.read_and_validate_config |> H.inline_resolve_servers
     :ok = B.release c
     {:ok, _} = B.ship c
     {:ok, _} = B.install c

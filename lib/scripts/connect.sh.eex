@@ -9,9 +9,10 @@
 
 app="<%= app %>"
 cookie="<%= cookie %>"
+name="$(hostname)"
 
 # connect with interactive erlang via iex
-cmd="iex --name connector@127.0.0.1 --cookie $cookie --remsh $app@127.0.0.1"
+cmd="iex --name connector@127.0.0.1 --cookie $cookie --remsh $app_at_$name@127.0.0.1"
 $cmd
 
 ########################################

@@ -18,14 +18,12 @@ defmodule Mix.Tasks.Goto do
     name = args |> List.first |> String.to_atom
 
     H.set_prod_environment
-    c = H.read_and_validate_config
+    c = H.read_and_validate_config |> H.inline_resolve_servers
 
-    servers = H.guess_server_list(c)
-
-    if not name in Keyword.keys(servers),
+    if not name in Keyword.keys(c[:servers]),
       do: raise "Server not found by that name"
 
-    ip = servers[name][:ip]
+    ip = c[:servers][name][:ip]
 
     c[:goto][:terminal]
     |> EEx.eval_string(title: "#{name}", command: "ssh #{c[:remote_user]}@#{ip}")

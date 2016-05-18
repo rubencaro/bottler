@@ -15,7 +15,6 @@ defmodule Bottler.Ship do
   def ship(config) do
     ship_config = config[:ship] |> H.defaults(timeout: 60_000, method: :scp)
 
-
     case ship_config[:method] do
       :scp -> scp_shipment(config, ship_config)
       :remote_scp -> remote_scp_shipment(config, ship_config)
@@ -23,30 +22,26 @@ defmodule Bottler.Ship do
   end
 
   defp scp_shipment(config, ship_config) do
-    servers = config |> H.guess_server_list
-
-    L.info "Shipping to #{servers |> K.keys |> Enum.join(",")} using straight SCP..."
+    L.info "Shipping to #{config[:servers] |> K.keys |> Enum.join(",")} using straight SCP..."
 
     task_opts = [expected: [], to_s: true, timeout: ship_config[:timeout]]
 
     common = [remote_user: config[:remote_user],
               app: Mix.Project.get!.project[:app]]
 
-    servers |> K.values
+    config[:servers] |> K.values
     |> H.in_tasks( &(&1 |> K.merge(common) |> run_scp), task_opts)
   end
 
   defp remote_scp_shipment(config, ship_config) do
-    servers = config |> H.guess_server_list
-
-    L.info "Shipping to #{servers |> K.keys |> Enum.join(",")} using remote SCP..."
+    L.info "Shipping to #{config[:servers] |> K.keys |> Enum.join(",")} using remote SCP..."
 
     task_opts = [expected: [], to_s: true, timeout: ship_config[:timeout]]
 
     common = [remote_user: config[:remote_user],
               app: Mix.Project.get!.project[:app]]
 
-    [first | rest] = servers |> K.values
+    [first | rest] = config[:servers] |> K.values
 
     # straight scp to first remote
     L.info "Uploading release to #{first[:ip]}..."
