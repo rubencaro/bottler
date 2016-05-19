@@ -21,7 +21,7 @@ defmodule Mix.Tasks.Bottler.Exec do
     switches = switches |> H.defaults(timeout: 30_000)
 
     H.set_prod_environment
-    c = H.read_and_validate_config |> H.inline_resolve_servers
+    c = H.read_and_validate_config |> H.inline_resolve_servers(switches)
     {:ok, _} = B.exec c, cmd, switches
     :ok
   end

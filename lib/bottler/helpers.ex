@@ -7,7 +7,7 @@ defmodule Bottler.Helpers do
     Parses given args using OptionParser with given opts.
     Raises ArgumentError if any unknown argument found.
   """
-  def parse_args!(args, opts) do
+  def parse_args!(args, opts \\ []) do
     {switches, remaining_args, unknown} = OptionParser.parse(args, opts)
 
     case unknown do
@@ -22,6 +22,40 @@ defmodule Bottler.Helpers do
   """
   def env(key, default \\ nil), do: env(:bottler, key, default)
   def env(app, key, default), do: Application.get_env(app, key, default)
+
+  @doc """
+  Spit to output any passed variable, with location information.
+  """
+  defmacro spit(obj \\ "", inspect_opts \\ []) do
+    quote do
+      %{file: file, line: line} = __ENV__
+      name = Process.info(self)[:registered_name]
+      chain = [ :bright, :red, "\n\n#{file}:#{line}",
+      :normal, "\n     #{inspect self}", :green," #{name}"]
+
+      msg = inspect(unquote(obj),unquote(inspect_opts))
+      if String.length(msg) > 2, do: chain = chain ++ [:red, "\n\n#{msg}"]
+
+      # chain = chain ++ [:yellow, "\n\n#{inspect Process.info(self)}"]
+
+      (chain ++ ["\n\n", :reset]) |> IO.ANSI.format(true) |> IO.puts
+
+      unquote(obj)
+    end
+  end
+
+  @doc """
+  Print to stdout a _TODO_ message, with location information.
+  """
+  defmacro todo(msg \\ "") do
+    quote do
+      %{file: file, line: line} = __ENV__
+      [ :yellow, "\nTODO: #{file}:#{line} #{unquote(msg)}\n", :reset]
+      |> IO.ANSI.format(true)
+      |> IO.puts
+      :todo
+    end
+  end
 
   @doc """
     Run given function in different Tasks. One `Task` for each entry on given
@@ -153,11 +187,21 @@ defmodule Bottler.Helpers do
   end
 
   @doc """
-    Returns a copy of given config with the servers list well formed.
-    It calls `guess_server_list` to get it.
+    Returns a copy of given config with the servers list well formed,
+    and filtered using given parsed switches.
   """
-  def inline_resolve_servers(config) do
-    config |> Keyword.put(:servers, guess_server_list(config))
+  def inline_resolve_servers(config), do: inline_resolve_servers(config, [])
+  def inline_resolve_servers(config, switches) do
+    servers_list = guess_server_list(config)
+      |> inline_filter_servers(switches[:servers])
+
+    config |> Keyword.put(:servers, servers_list)
+  end
+
+  defp inline_filter_servers(servers, nil), do: servers
+  defp inline_filter_servers(servers, switch) when is_binary(switch) do
+    names = switch |> String.split(",")
+    servers |> Enum.filter(fn({k,v})-> to_string(k) in names end)
   end
 
   defp get_gce_server_list(config) do
@@ -180,40 +224,6 @@ defmodule Bottler.Helpers do
     Reads a file as Erlang terms
   """
   def read_terms(path), do: :file.consult('#{path}')
-
-  @doc """
-    Spit to output any passed variable, with location information.
-  """
-  defmacro spit(obj \\ "", inspect_opts \\ []) do
-    quote do
-      %{file: file, line: line} = __ENV__
-      name = Process.info(self)[:registered_name]
-      chain = [ :bright, :red, "\n\n#{file}:#{line}",
-                :normal, "\n     #{inspect self}", :green," #{name}"]
-
-      msg = inspect(unquote(obj),unquote(inspect_opts))
-      if String.length(msg) > 2, do: chain = chain ++ [:red, "\n\n#{msg}"]
-
-      # chain = chain ++ [:yellow, "\n\n#{inspect Process.info(self)}"]
-
-      (chain ++ ["\n\n", :reset]) |> IO.ANSI.format(true) |> IO.puts
-
-      unquote(obj)
-    end
-  end
-
-  @doc """
-    Print to stdout a _TODO_ message, with location information.
-  """
-  defmacro todo(msg \\ "") do
-    quote do
-      %{file: file, line: line} = __ENV__
-      [ :yellow, "\nTODO: #{file}:#{line} #{unquote(msg)}\n", :reset]
-      |> IO.ANSI.format(true)
-      |> IO.puts
-      :todo
-    end
-  end
 
   @doc """
     Apply given defaults to given Keyword. Returns merged Keyword.

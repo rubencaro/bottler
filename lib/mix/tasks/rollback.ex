@@ -19,9 +19,11 @@ defmodule Mix.Tasks.Bottler.Rollback do
 
   use Mix.Task
 
-  def run(_args) do
+  def run(args) do
+    {switches, _} = H.parse_args!(args)
+
     H.set_prod_environment
-    c = H.read_and_validate_config |> H.inline_resolve_servers
+    c = H.read_and_validate_config |> H.inline_resolve_servers(switches)
     {:ok, _} = B.rollback c
     :ok
   end

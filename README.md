@@ -159,7 +159,6 @@ When you perform an operation on a server, its ip will be obtained using `gcloud
 
 ## TODOs
 
-* Options to filter target servers from command line (dev)
 * Add more testing
 * Separate section for documenting every configuration option
 * Get it stable on production
@@ -176,6 +175,7 @@ When you perform an operation on a server, its ip will be obtained using `gcloud
 
 ### master
 
+* Options to filter target servers from command line
 * Resolve server ips only once
 * Add support for deploy to GCE instances
 * remove `helper_scripts` task
