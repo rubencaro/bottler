@@ -58,6 +58,23 @@ defmodule Bottler.Helpers do
   end
 
   @doc """
+    Pipable log. Calls Logger and then returns first argument.
+    Second argument is a template, or a function returning a template.
+    To render the template `EEx` will be used, and the first argument will be passed.
+  """
+  def pipe_log(obj, template, opts \\ [])
+  def pipe_log(obj, fun, opts) when is_function(fun) do
+    pipe_log(obj, fun.(obj), opts)
+  end
+  def pipe_log(obj, template, opts) do
+    opts = opts |> defaults(level: :info)
+
+    msg = template |> EEx.eval_string(data: obj)
+    :ok = L.log opts[:level], msg
+    obj
+  end
+
+  @doc """
     Run given function in different Tasks. One `Task` for each entry on given
     list. Each entry on list will be given as args for the function.
 
@@ -212,6 +229,7 @@ defmodule Bottler.Helpers do
     |> Enum.map(fn(i)->
       {i["NAME"] |> String.to_atom, [ip: i["EXTERNAL_IP"]]}
     end)
+    |> pipe_log("<%= inspect data %>")
   end
 
   @doc """
