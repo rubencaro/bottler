@@ -171,6 +171,24 @@ defmodule Bottler.Helpers do
     c
   end
 
+  def validate_branch(config) do
+    case check_active_branch(config[:forced_branch]) do
+      true -> config
+      false -> L.error "You are not in branch '#{config[:forced_branch]}'."
+        raise "WrongBranchError"
+    end
+  end
+
+  defp check_active_branch(nil), do: true
+  defp check_active_branch(branch) do
+    "git branch 2> /dev/null | sed -e '/^[^*]/d' -e \"s/* \\(.*\\)/\\1/\""
+    |> to_char_list
+    |> :os.cmd
+    |> to_string
+    |> String.replace("\n","")
+    |> Kernel.==(branch)
+  end
+
   defp is_valid_servers_list?(s) do
     K.keyword?(s) and ( is_gce_servers?(s) or is_default_servers?(s) )
   end

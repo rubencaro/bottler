@@ -60,7 +60,8 @@ On your config:
                                additional_folders: ["docs"],
                                ship: [timeout: 60_000,
                                       method: :scp],
-                               goto: [terminal: "terminator -T '<%= title %>' -e '<%= command %>'"] ]
+                               goto: [terminal: "terminator -T '<%= title %>' -e '<%= command %>'"]
+                               forced_branch: "master" ]
 ```
 
 * `servers` - list of servers to deploy on.
@@ -73,6 +74,7 @@ On your config:
   * `method` - method of shipment, one of (`:scp`, `:remote_scp`, etc..)
 * `goto` - options for the `goto` task
   * `terminal` - template for the actual terminal command
+* `forced_branch` - only allow executing _dangerous_ tasks when local git is on given branch
 
 Then you can use the tasks like `mix bottler.release`. Take a look at the docs for each task with `mix help <task>`.
 
@@ -175,6 +177,7 @@ When you perform an operation on a server, its ip will be obtained using `gcloud
 
 ### master
 
+* Support for forced release branch
 * Log guessed server ips
 * Options to filter target servers from command line
 * Resolve server ips only once
