@@ -236,7 +236,7 @@ defmodule Bottler.Helpers do
   defp inline_filter_servers(servers, nil), do: servers
   defp inline_filter_servers(servers, switch) when is_binary(switch) do
     names = switch |> String.split(",")
-    servers |> Enum.filter(fn({k,v})-> to_string(k) in names end)
+    servers |> Enum.filter(fn({k,_})-> to_string(k) in names end)
   end
 
   defp get_gce_server_list(config) do

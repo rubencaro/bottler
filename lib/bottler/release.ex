@@ -150,7 +150,7 @@ defmodule Bottler.Release do
     needed = [:kernel, :stdlib, :elixir, :sasl, :compiler, :syntax_tools]
     all = app_files_info |> Enum.reduce([apps: needed, iapps: []],
               fn({n,_,a,ia},[apps: apps, iapps: iapps]) ->
-                if ia == nil, do: ia = []
+                ia = if ia == nil, do: [], else: ia
                 apps = Enum.concat([apps,[n],a,ia])
                 iapps = Enum.concat(iapps,ia)
                 [apps: apps, iapps: iapps]
