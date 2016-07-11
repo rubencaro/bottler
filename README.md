@@ -86,6 +86,8 @@ You may also want to add `<project>/rel` and `<project>/.bottler` to your `.giti
 
 Build a release file. Use like `mix bottler.release`.
 
+Any script (or `EEx` template) on a `lib/scripts folder` will be included into the release package. The `install` task also links that folder directly from the current release, so you can see your scripts on production inside `$HOME/<project>/current/scripts`. The contents of the folder will be merged with the own `bottler` `lib/scripts` folder. Take a look at it for examples ( https://github.com/rubencaro/bottler/tree/master/lib/scripts ).
+
 ## Ship
 
 Ship a release file to configured remote servers.
