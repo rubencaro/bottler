@@ -16,6 +16,8 @@ defmodule ObserverWrapper do
 
 end
 
+:net_adm.ping(System.argv |> hd |> String.to_atom)
+
 :ok = :observer.start
 
 :timer.sleep 5_000
