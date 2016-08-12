@@ -181,6 +181,7 @@ When you perform an operation on a server, its ip will be obtained using `gcloud
 
 ### master
 
+* Raise an error when release versions do not match
 * Support for forced release branch
 * Log guessed server ips
 * Options to filter target servers from command line

@@ -325,7 +325,7 @@ defmodule Bottler.Helpers do
   @doc """
     Log local and remote versions of erts
   """
-  def log_erts_versions(config) do
+  def check_erts_versions(config) do
     :ssh.start # just in case
 
     local_release = :erlang.system_info(:version) |> to_string
@@ -344,5 +344,7 @@ defmodule Bottler.Helpers do
     level = if Enum.all?(remote_releases, &( local_release == &1 |> String.split(" ") |> List.first )), do: :info, else: :error
 
     L.log level, "Compiling against Erlang/OTP release #{local_release}. Remote releases are #{Enum.map_join(remote_releases, ", ", &(&1))}."
+
+    if level == :error, do: raise "Aborted release"
   end
 end
