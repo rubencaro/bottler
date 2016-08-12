@@ -112,10 +112,50 @@ Touch `tmp/restart` on configured remote servers.
 That expects to have `Harakiri` or similar software reacting to that.
 Use like `mix bottler.restart`.
 
+## Alive Loop
+
+Tipically implemented on production like this:
+
+```elixir
+@doc """
+Tell the world outside we are alive
+"""
+def alive_loop(opts \\ []) do
+  # register the name if asked
+  if opts[:name], do: Process.register(self,opts[:name])
+
+  tmp_path = Application.get_env(:myapp, :tmp_path) |> Path.expand
+  {_, _, version} = Application.started_applications |> Enum.find(&({:myapp, _, _} = &1))
+  :os.cmd 'echo \'#{version}\' > #{tmp_path}/alive'
+  :timer.sleep 5_000
+  alive_loop
+end
+```
+
+And run by a `Task` on the supervision tree like this:
+
+```elixir
+worker(Task, [MyApp, :alive_loop, [[name: MyApp.AliveLoop]]])
+```
+
+It touches the `tmp/alive` file every ~5 seconds, so anyone outside of the ErlangVM can tell if the app is actually running.
+
+### Watchdog script for crontab
+
+Among the generated scripts, put by the _deploy_ task inside `$HOME/<project>/current/scripts`, there's a `watchdog.sh` meant to be run by `cron`.
+
+That script checks the _mtime_ of the `tmp/alive` file to ensure that it's younger than 60 seconds. If it's not, then it starts the application. If the application is running, the watchdog script will not even try to start it again.
+
+### Green Flag Test
+
+A task to wait until the contents of `tmp/alive` file matches the version of the `current` release, or the given timeout is reached.
+
+Use like `mix bottler.green_flag`.
+
 ## Deploy
 
 Build a release file, ship it to remote servers, install it, and restart
-the app. No hot code swap for now.
+the app. Then it waits for the green flag test. No hot code swap for now.
 
 Use like `mix deploy`.
 
@@ -168,19 +208,18 @@ When you perform an operation on a server, its ip will be obtained using `gcloud
 * Add more testing
 * Separate section for documenting every configuration option
 * Get it stable on production
-* Wait until _current_ release is seen running.
 * Complete README
 * Rollback to _any_ previous version
 * Optionally include `erts` (now we can ship openssl too see [here](http://www.erlang.org/download/otp_src_17.4.readme))
 * Allow hot code swap (just follow [this](http://erlang.org/doc/design_principles/release_handling.html) to prepare the release, and then provide an example of [Harakiri](http://github.com/rubencaro/harakiri) action that actually performs the upgrade)
 * Support for hooks
-* Add tools for docker deploys
 * Add support for deploy to AWS instances [*](https://github.com/gleber/erlcloud)[*](notes/aws.md)
 
 ## Changelog
 
 ### master
 
+* Green flag support.
 * Support for forced release branch
 * Log guessed server ips
 * Options to filter target servers from command line
