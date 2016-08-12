@@ -36,6 +36,8 @@ Initially it was an alternative to [exrm](https://github.com/bitwalker/exrm), du
 
 Recently, after creating and using bottler on several projects for some months, I discovered [edeliver](https://github.com/boldpoker/edeliver) and it looks great! When I have time I will read carefully its code and play differences with bottler, maybe borrow some ideas.
 
+Looking forward to [distiller](https://github.com/bitwalker/distiller) too.
+
 ## Use
 
 Add to your `deps` like this:
