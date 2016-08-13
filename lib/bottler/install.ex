@@ -24,8 +24,8 @@ defmodule Bottler.Install do
   end
 
   defp on_server(args) do
-    ip = args[:ip] |> to_char_list
-    user = args[:user] |> to_char_list
+    ip = args[:ip] |> to_charlist
+    user = args[:user] |> to_charlist
 
     L.info "Installing #{Mix.Project.get!.project[:version]} on #{ip}..."
 

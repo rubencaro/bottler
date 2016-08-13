@@ -22,7 +22,7 @@ defmodule Bottler.Restart do
     config[:servers] |> Keyword.values |> H.in_tasks( fn(args) ->
         args = args ++ [remote_user: config[:remote_user]]
         "ssh <%= remote_user %>@<%= ip %> 'touch #{app}/tmp/restart'"
-          |> EEx.eval_string(args) |> to_char_list |> :os.cmd
+          |> EEx.eval_string(args) |> to_charlist |> :os.cmd
       end, expected: [], to_s: true)
   end
 

@@ -17,7 +17,8 @@ including the whole `erts` by now).
 * __install__: properly install your shipped release on each of those servers.
 * __restart__: fire a quick restart to apply the newly installed release if you
 are using [Harakiri](http://github.com/rubencaro/harakiri).
-* __deploy__: _release_, _ship_, _install_ and then _restart_.
+* __green_flag__: wait for the deployed application to signal it's working.
+* __deploy__: _release_, _ship_, _install_, _restart_, and then wait for _green_flag_.
 * __rollback__: quick _restart_ on a previous release.
 * __observer__: opens an observer window connected to given server.
 * __exec__: runs given command on every server, showing their outputs.
@@ -62,6 +63,7 @@ On your config:
                                additional_folders: ["docs"],
                                ship: [timeout: 60_000,
                                       method: :scp],
+                               green_flag: [timeout: 30_000],
                                goto: [terminal: "terminator -T '<%= title %>' -e '<%= command %>'"]
                                forced_branch: "master" ]
 ```
@@ -74,6 +76,8 @@ On your config:
 * `ship` - options for the `ship` task
   * `timeout` - timeout millis for shipment through scp, defaults to 60_000
   * `method` - method of shipment, one of (`:scp`, `:remote_scp`, etc..)
+* `green_flag` - options for the `green_flag` task
+  * `timeout` - timeout millis waiting for green flags, defaults to 30_000
 * `goto` - options for the `goto` task
   * `terminal` - template for the actual terminal command
 * `forced_branch` - only allow executing _dangerous_ tasks when local git is on given branch
@@ -151,6 +155,19 @@ That script checks the _mtime_ of the `tmp/alive` file to ensure that it's young
 A task to wait until the contents of `tmp/alive` file matches the version of the `current` release, or the given timeout is reached.
 
 Use like `mix bottler.green_flag`.
+
+If you have special needs with the start of your application, such as to wait for some cache to fill or some connections to be made, then you just have to control the actual value that is written on the `alive` file. __It has to match the new version only when everything is ready to work.__ You can use an `Agent` like:
+
+```elixir
+@doc """
+Tell the world outside we are alive
+"""
+def alive_loop(opts \\ []) do
+  #...
+  version = Agent.get(:version_holder, &(&1))
+  #...
+end
+```
 
 ## Deploy
 

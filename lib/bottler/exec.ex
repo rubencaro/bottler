@@ -23,9 +23,9 @@ defmodule Bottler.Exec do
   end
 
   defp on_server(args) do
-    ip = args[:ip] |> to_char_list
-    user = args[:user] |> to_char_list
-    cmd = args[:cmd] |> to_char_list
+    ip = args[:ip] |> to_charlist
+    user = args[:user] |> to_charlist
+    cmd = args[:cmd] |> to_charlist
 
     L.info "Executing '#{args[:cmd]}' on #{ip}..."
 

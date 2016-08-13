@@ -27,7 +27,7 @@ defmodule Mix.Tasks.Goto do
 
     c[:goto][:terminal]
     |> EEx.eval_string(title: "#{name}", command: "ssh #{c[:remote_user]}@#{ip}")
-    |> to_char_list |> :os.cmd
+    |> to_charlist |> :os.cmd
 
     :ok
   end

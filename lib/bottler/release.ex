@@ -30,7 +30,7 @@ defmodule Bottler.Release do
     do: H.write_term("rel/#{Mix.Project.get!.project[:app]}.rel", get_rel_term)
 
   defp generate_tar_file(config) do
-    app = Mix.Project.get!.project[:app] |> to_char_list
+    app = Mix.Project.get!.project[:app] |> to_charlist
 
     # add scripts folder
     process_scripts_folder config
@@ -115,8 +115,8 @@ defmodule Bottler.Release do
 
   defp get_rel_term do
     mixf = Mix.Project.get!
-    app = mixf.project[:app] |> to_char_list
-    vsn = mixf.project[:version] |> to_char_list
+    app = mixf.project[:app] |> to_charlist
+    vsn = mixf.project[:version] |> to_charlist
 
     {:release,
       {app, vsn},
