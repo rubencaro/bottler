@@ -128,10 +128,10 @@ def alive_loop(opts \\ []) do
   # register the name if asked
   if opts[:name], do: Process.register(self,opts[:name])
 
+  :timer.sleep 5_000
   tmp_path = Application.get_env(:myapp, :tmp_path) |> Path.expand
   {_, _, version} = Application.started_applications |> Enum.find(&({:myapp, _, _} = &1))
   :os.cmd 'echo \'#{version}\' > #{tmp_path}/alive'
-  :timer.sleep 5_000
   alive_loop
 end
 ```
