@@ -25,6 +25,6 @@ end
 observer_pid = :os.cmd('pgrep -f observerunique')
 ObserverWrapper.wait_for_observer_to_end
 IO.puts "Killing observer with pid #{observer_pid}"
-:os.cmd("kill #{observer_pid}" |> to_char_list)
+:os.cmd("kill #{observer_pid}" |> to_charlist)
 
 :ok

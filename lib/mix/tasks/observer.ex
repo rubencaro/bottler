@@ -21,7 +21,7 @@ defmodule Mix.Tasks.Observer do
 
     # auto closing tunnel
     :os.cmd('killall epmd') # free distributed erlang port
-    cmd = "ssh -L 4369:localhost:4369 -L #{port}:localhost:#{port} #{c[:remote_user]}@#{ip}" |> to_char_list
+    cmd = "ssh -L 4369:localhost:4369 -L #{port}:localhost:#{port} #{c[:remote_user]}@#{ip}" |> to_charlist
     IO.puts "Opening tunnel... \n#{cmd}"
     spawn fn -> :os.cmd(cmd) |> to_string |> IO.puts end
     :timer.sleep 1000
@@ -29,7 +29,7 @@ defmodule Mix.Tasks.Observer do
 
     # observer
     IO.puts "Starting observer..."
-    cmd = "elixir --name observerunique@127.0.0.1 --cookie monikako --no-halt #{__DIR__}/../../../lib/mix/scripts/observer.exs #{node_name}" |> to_char_list
+    cmd = "elixir --name observerunique@127.0.0.1 --cookie monikako --no-halt #{__DIR__}/../../../lib/mix/scripts/observer.exs #{node_name}" |> to_charlist
     IO.puts cmd
     :os.cmd(cmd) |> to_string |> IO.puts
 
@@ -38,7 +38,7 @@ defmodule Mix.Tasks.Observer do
 
   defp get_port(c, server_name, ip) do
     cmd = "ssh #{c[:remote_user]}@#{ip} \"source /home/#{c[:remote_user]}/.bash_profile && epmd -names\" | grep #{server_name} | cut -d \" \" -f 5"
-    :os.cmd(cmd |> to_char_list) |> to_string |> String.strip(?\n)
+    :os.cmd(cmd |> to_charlist) |> to_string |> String.strip(?\n)
   end
 
   defp erlang_node_name(server_name) do

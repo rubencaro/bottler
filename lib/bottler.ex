@@ -9,6 +9,7 @@ defmodule Bottler do
   defdelegate ship(config), to: Bottler.Ship
   defdelegate install(config), to: Bottler.Install
   defdelegate restart(config), to: Bottler.Restart
+  defdelegate green_flag(config), to: Bottler.GreenFlag
   defdelegate rollback(config), to: Bottler.Rollback
   defdelegate exec(config, cmd, switches), to: Bottler.Exec
 

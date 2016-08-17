@@ -25,7 +25,7 @@ defmodule Bottler.Helpers.GCE do
 
   defp exec(command, config) do
     "#{command} --project=#{config[:servers][:gce_project]} | grep -e RUNNING -e MACHINE_TYPE"
-    |> to_char_list
+    |> to_charlist
     |> :os.cmd
     |> to_string
   end

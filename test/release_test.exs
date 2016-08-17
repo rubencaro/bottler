@@ -29,7 +29,7 @@ defmodule ReleaseTest do
 
     # check rel term
     assert {:ok,[{:release, app, erts, deps}]} = H.read_terms "rel/bottler.rel"
-    assert {'bottler', to_char_list(vsn)} == app
+    assert {'bottler', to_charlist(vsn)} == app
     assert {:erts, :erlang.system_info(:version)} == erts
     for dep <- deps do
       case dep do

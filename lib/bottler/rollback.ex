@@ -25,8 +25,8 @@ defmodule Bottler.Rollback do
   end
 
   defp on_server(args) do
-    ip = args[:ip] |> to_char_list
-    user = args[:user] |> to_char_list
+    ip = args[:ip] |> to_charlist
+    user = args[:user] |> to_charlist
 
     {:ok, conn} = SSHEx.connect ip: ip, user: user
 

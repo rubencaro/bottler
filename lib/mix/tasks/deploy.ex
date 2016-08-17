@@ -26,6 +26,7 @@ defmodule Mix.Tasks.Deploy do
     {:ok, _} = B.ship c
     {:ok, _} = B.install c
     {:ok, _} = B.restart c
+    :ok = B.green_flag c
     :ok
   end
 

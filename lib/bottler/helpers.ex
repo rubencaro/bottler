@@ -24,6 +24,16 @@ defmodule Bottler.Helpers do
   def env(app, key, default), do: Application.get_env(app, key, default)
 
   @doc """
+    Get current app's name
+  """
+  def app, do: Mix.Project.get!.project[:app]
+
+  @doc """
+    Chop final end of line chars to given string
+  """
+  def chop(s), do: String.replace(s, ~r/[\n\r\\"]/, "")
+
+  @doc """
   Spit to output any passed variable, with location information.
   """
   defmacro spit(obj \\ "", inspect_opts \\ []) do
@@ -159,6 +169,7 @@ defmodule Bottler.Helpers do
           remote_port: 22,
           additional_folders: [],
           ship: [],
+          green_flag: [],
           goto: [terminal: "terminator -T '<%= title %>' -e '<%= command %>' &"] ]
         |> K.merge(Application.get_env(:bottler, :params))
 
@@ -182,7 +193,7 @@ defmodule Bottler.Helpers do
   defp check_active_branch(nil), do: true
   defp check_active_branch(branch) do
     "git branch 2> /dev/null | sed -e '/^[^*]/d' -e \"s/* \\(.*\\)/\\1/\""
-    |> to_char_list
+    |> to_charlist
     |> :os.cmd
     |> to_string
     |> String.replace("\n","")
@@ -332,10 +343,10 @@ defmodule Bottler.Helpers do
 
     {_, remote_releases} = config[:servers] |> K.values
       |> in_tasks( fn(args)->
-        user = config[:remote_user] |> to_char_list
-        ip = args[:ip] |> to_char_list
+        user = config[:remote_user] |> to_charlist
+        ip = args[:ip] |> to_charlist
         {:ok, conn} = SSHEx.connect(ip: ip, user: user)
-        cmd = "source ~/.bash_profile && erl -eval 'erlang:display(erlang:system_info(version)), halt().'  -noshell" |> to_char_list
+        cmd = "source ~/.bash_profile && erl -eval 'erlang:display(erlang:system_info(version)), halt().'  -noshell" |> to_charlist
         SSHEx.cmd!(conn, cmd)
         |> String.replace(~r/[\n\r\\"]/, "")
         |> Kernel.<>(" on #{ip}")

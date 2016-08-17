@@ -70,7 +70,7 @@ defmodule Bottler.Ship do
     args[:method]
     |> get_scp_template
     |> EEx.eval_string(args)
-    |> to_char_list
+    |> to_charlist
     |> :os.cmd
   end
 

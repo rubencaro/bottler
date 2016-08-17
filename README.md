@@ -17,7 +17,8 @@ including the whole `erts` by now).
 * __install__: properly install your shipped release on each of those servers.
 * __restart__: fire a quick restart to apply the newly installed release if you
 are using [Harakiri](http://github.com/rubencaro/harakiri).
-* __deploy__: _release_, _ship_, _install_ and then _restart_.
+* __green_flag__: wait for the deployed application to signal it's working.
+* __deploy__: _release_, _ship_, _install_, _restart_, and then wait for _green_flag_.
 * __rollback__: quick _restart_ on a previous release.
 * __observer__: opens an observer window connected to given server.
 * __exec__: runs given command on every server, showing their outputs.
@@ -62,6 +63,7 @@ On your config:
                                additional_folders: ["docs"],
                                ship: [timeout: 60_000,
                                       method: :scp],
+                               green_flag: [timeout: 30_000],
                                goto: [terminal: "terminator -T '<%= title %>' -e '<%= command %>'"]
                                forced_branch: "master" ]
 ```
@@ -74,6 +76,8 @@ On your config:
 * `ship` - options for the `ship` task
   * `timeout` - timeout millis for shipment through scp, defaults to 60_000
   * `method` - method of shipment, one of (`:scp`, `:remote_scp`, etc..)
+* `green_flag` - options for the `green_flag` task
+  * `timeout` - timeout millis waiting for green flags, defaults to 30_000
 * `goto` - options for the `goto` task
   * `terminal` - template for the actual terminal command
 * `forced_branch` - only allow executing _dangerous_ tasks when local git is on given branch
@@ -112,10 +116,63 @@ Touch `tmp/restart` on configured remote servers.
 That expects to have `Harakiri` or similar software reacting to that.
 Use like `mix bottler.restart`.
 
+## Alive Loop
+
+Tipically implemented on production like this:
+
+```elixir
+@doc """
+Tell the world outside we are alive
+"""
+def alive_loop(opts \\ []) do
+  # register the name if asked
+  if opts[:name], do: Process.register(self,opts[:name])
+
+  :timer.sleep 5_000
+  tmp_path = Application.get_env(:myapp, :tmp_path) |> Path.expand
+  {_, _, version} = Application.started_applications |> Enum.find(&({:myapp, _, _} = &1))
+  :os.cmd 'echo \'#{version}\' > #{tmp_path}/alive'
+  alive_loop
+end
+```
+
+And run by a `Task` on the supervision tree like this:
+
+```elixir
+worker(Task, [MyApp, :alive_loop, [[name: MyApp.AliveLoop]]])
+```
+
+It touches the `tmp/alive` file every ~5 seconds, so anyone outside of the ErlangVM can tell if the app is actually running.
+
+### Watchdog script for crontab
+
+Among the generated scripts, put by the _deploy_ task inside `$HOME/<project>/current/scripts`, there's a `watchdog.sh` meant to be run by `cron`.
+
+That script checks the _mtime_ of the `tmp/alive` file to ensure that it's younger than 60 seconds. If it's not, then it starts the application. If the application is running, the watchdog script will not even try to start it again.
+
+### Green Flag Test
+
+A task to wait until the contents of `tmp/alive` file matches the version of the `current` release, or the given timeout is reached.
+
+Use like `mix bottler.green_flag`.
+
+If you have special needs with the start of your application, such as to wait for some cache to fill or some connections to be made, then you just have to control the actual value that is written on the `alive` file. __It has to match the new version only when everything is ready to work.__ You can use an `Agent` like:
+
+```elixir
+@doc """
+Tell the world outside we are alive
+"""
+def alive_loop(opts \\ []) do
+  #...
+  version = Agent.get(:version_holder, &(&1))
+  #...
+end
+```
+
 ## Deploy
 
 Build a release file, ship it to remote servers, install it, and restart
-the app. No hot code swap for now.
+the app. Then it waits for the green flag test. No hot code swap for now.
 
 Use like `mix deploy`.
 
@@ -168,20 +225,18 @@ When you perform an operation on a server, its ip will be obtained using `gcloud
 * Add more testing
 * Separate section for documenting every configuration option
 * Get it stable on production
-* Wait until _current_ release is seen running.
 * Complete README
 * Rollback to _any_ previous version
 * Optionally include `erts` (now we can ship openssl too see [here](http://www.erlang.org/download/otp_src_17.4.readme))
 * Allow hot code swap (just follow [this](http://erlang.org/doc/design_principles/release_handling.html) to prepare the release, and then provide an example of [Harakiri](http://github.com/rubencaro/harakiri) action that actually performs the upgrade)
 * Support for hooks
-* Add tools for docker deploys
 * Add support for deploy to AWS instances [*](https://github.com/gleber/erlcloud)[*](notes/aws.md)
 
 ## Changelog
 
 ### master
 
-* Raise an error when release versions do not match
+* Green flag support.
 * Support for forced release branch
 * Log guessed server ips
 * Options to filter target servers from command line
