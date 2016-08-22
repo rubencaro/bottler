@@ -29,7 +29,7 @@ defmodule Mix.Tasks.Observer do
 
     # observer
     IO.puts "Starting observer..."
-    cmd = "elixir --name observerunique@127.0.0.1 --cookie monikako --no-halt #{__DIR__}/../../../lib/mix/scripts/observer.exs #{node_name}" |> to_charlist
+    cmd = "elixir --name observerunique@127.0.0.1 --cookie #{c[:cookie]} --no-halt #{__DIR__}/../../../lib/mix/scripts/observer.exs #{node_name}" |> to_charlist
     IO.puts cmd
     :os.cmd(cmd) |> to_string |> IO.puts
 
