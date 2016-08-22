@@ -18,7 +18,7 @@ defmodule Bottler.GreenFlag do
   def green_flag(config) do
     green_flag_config = config[:green_flag] |> H.defaults(timeout: 30_000)
 
-    :ok = :ssh.start # just in case
+    :ssh.start # just in case
 
     L.info "Waiting for Green Flag on #{config[:servers] |> Keyword.keys |> Enum.join(",")}..."
 
