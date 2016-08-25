@@ -35,24 +35,34 @@ defmodule Bottler.Helpers do
 
   @doc """
   Spit to output any passed variable, with location information.
+
+  If `sample` option is given, it should be a float between 0.0 and 1.0.
+  Output will be produced randomly with that probability.
   """
   defmacro spit(obj \\ "", inspect_opts \\ []) do
     quote do
-      %{file: file, line: line} = __ENV__
-      name = Process.info(self)[:registered_name]
-      chain = [ :bright, :red, "\n\n#{file}:#{line}",
-      :normal, "\n     #{inspect self}", :green," #{name}"]
+      if should_print(unquote(inspect_opts)[:sample]) do
+        %{file: file, line: line} = __ENV__
+        name = Process.info(self)[:registered_name]
+        chain = [ :bright, :red, "\n\n#{file}:#{line}",
+        :normal, "\n     #{inspect self}", :green," #{name}"]
 
-      msg = inspect(unquote(obj),unquote(inspect_opts))
-      if String.length(msg) > 2, do: chain = chain ++ [:red, "\n\n#{msg}"]
+        msg = inspect(unquote(obj),unquote(inspect_opts))
+        if String.length(msg) > 2, do: chain = chain ++ [:red, "\n\n#{msg}"]
 
-      # chain = chain ++ [:yellow, "\n\n#{inspect Process.info(self)}"]
+        # chain = chain ++ [:yellow, "\n\n#{inspect Process.info(self)}"]
 
-      (chain ++ ["\n\n", :reset]) |> IO.ANSI.format(true) |> IO.puts
+        (chain ++ ["\n\n", :reset]) |> IO.ANSI.format(true) |> IO.puts
+      end
 
       unquote(obj)
     end
   end
+
+  defp should_print(n) when is_float(n) do
+    :rand.uniform <= n
+  end
+  defp should_print(nil), do: true
 
   @doc """
   Print to stdout a _TODO_ message, with location information.
