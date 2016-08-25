@@ -44,14 +44,15 @@ defmodule Bottler.Helpers do
   defmacro spit(obj \\ "", opts \\ []) do
     quote do
       opts = unquote(opts)
-      maybe_spit(unquote(obj), opts, opts[:sample])
+      obj = unquote(obj)
 
-      unquote(obj)  # chainable
+      maybe_spit(obj, opts, opts[:sample])
+      obj  # chainable
     end
   end
 
-  def maybe_spit(obj, opts, nil), do: do_spit(obj, opts)
-  def maybe_spit(obj, opts, prob) when is_float(prob) do
+  defp maybe_spit(obj, opts, nil), do: do_spit(obj, opts)
+  defp maybe_spit(obj, opts, prob) when is_float(prob) do
     if :rand.uniform <= prob, do: do_spit(obj, opts)
   end
 
