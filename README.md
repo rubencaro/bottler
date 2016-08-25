@@ -130,7 +130,7 @@ def alive_loop(opts \\ []) do
 
   :timer.sleep 5_000
   tmp_path = Application.get_env(:myapp, :tmp_path) |> Path.expand
-  {_, _, version} = Application.started_applications |> Enum.find(&({:myapp, _, _} = &1))
+  {_, _, version} = Application.started_applications |> Enum.find(&(match?({:myapp, _, _}, &1)))
   :os.cmd 'echo \'#{version}\' > #{tmp_path}/alive'
   alive_loop
 end
