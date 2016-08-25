@@ -43,24 +43,28 @@ defmodule Bottler.Helpers do
   """
   defmacro spit(obj \\ "", opts \\ []) do
     quote do
-      if should_print(unquote(opts[:sample])) do
+      opts = unquote(opts)
+      maybe_spit(unquote(obj), opts, opts[:sample])
 
-        %{file: file, line: line} = __ENV__
-        name = Process.info(self)[:registered_name]
-        chain = [ :bright, :red, "\n\n#{file}:#{line}", :normal, "\n     #{inspect self}", :green," #{name}"]
-
-        msg = inspect(unquote(obj),unquote(opts))
-        chain = chain ++ [:red, "\n\n#{msg}"]
-
-        (chain ++ ["\n\n", :reset]) |> IO.ANSI.format(true) |> IO.puts
-      end
-
-      unquote(obj)
+      unquote(obj)  # chainable
     end
   end
 
-  defp should_print(nil), do: true
-  defp should_print(n) when is_float(n), do: :rand.uniform <= n
+  def maybe_spit(obj, opts, nil), do: do_spit(obj, opts)
+  def maybe_spit(obj, opts, prob) when is_float(prob) do
+    if :rand.uniform <= prob, do: do_spit(obj, opts)
+  end
+
+  defp do_spit(obj, opts) do
+    %{file: file, line: line} = __ENV__
+    name = Process.info(self)[:registered_name]
+    chain = [ :bright, :red, "\n\n#{file}:#{line}", :normal, "\n     #{inspect self}", :green," #{name}"]
+
+    msg = inspect(obj, opts)
+    chain = chain ++ [:red, "\n\n#{msg}"]
+
+    (chain ++ ["\n\n", :reset]) |> IO.ANSI.format(true) |> IO.puts
+  end
 
   @doc """
   Print to stdout a _TODO_ message, with location information.
