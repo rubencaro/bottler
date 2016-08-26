@@ -51,8 +51,8 @@ defmodule Bottler.Helpers do
     end
   end
 
-  defp maybe_spit(obj, opts, nil), do: do_spit(obj, opts)
-  defp maybe_spit(obj, opts, prob) when is_float(prob) do
+  def maybe_spit(obj, opts, nil), do: do_spit(obj, opts)
+  def maybe_spit(obj, opts, prob) when is_float(prob) do
     if :rand.uniform <= prob, do: do_spit(obj, opts)
   end
 
