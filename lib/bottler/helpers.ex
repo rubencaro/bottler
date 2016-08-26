@@ -46,7 +46,7 @@ defmodule Bottler.Helpers do
       opts = unquote(opts)
       obj = unquote(obj)
 
-      maybe_spit(obj, opts, opts[:sample])
+      Bottler.Helpers.maybe_spit(obj, opts, opts[:sample])
       obj  # chainable
     end
   end
