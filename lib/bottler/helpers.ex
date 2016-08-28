@@ -45,19 +45,21 @@ defmodule Bottler.Helpers do
     quote do
       opts = unquote(opts)
       obj = unquote(obj)
+      opts = Keyword.put(opts, :env, __ENV__)
 
-      Bottler.Helpers.maybe_spit(obj, opts, opts[:sample])
+      Alfred.Helpers.maybe_spit(obj, opts, opts[:sample])
       obj  # chainable
     end
   end
 
+  @doc false
   def maybe_spit(obj, opts, nil), do: do_spit(obj, opts)
   def maybe_spit(obj, opts, prob) when is_float(prob) do
     if :rand.uniform <= prob, do: do_spit(obj, opts)
   end
 
   defp do_spit(obj, opts) do
-    %{file: file, line: line} = __ENV__
+    %{file: file, line: line} = opts[:env]
     name = Process.info(self)[:registered_name]
     chain = [ :bright, :red, "\n\n#{file}:#{line}", :normal, "\n     #{inspect self}", :green," #{name}"]
 
@@ -66,7 +68,7 @@ defmodule Bottler.Helpers do
 
     (chain ++ ["\n\n", :reset]) |> IO.ANSI.format(true) |> IO.puts
   end
-
+  
   @doc """
   Print to stdout a _TODO_ message, with location information.
   """
