@@ -68,7 +68,7 @@ defmodule Bottler.Helpers do
 
     (chain ++ ["\n\n", :reset]) |> IO.ANSI.format(true) |> IO.puts
   end
-  
+
   @doc """
   Print to stdout a _TODO_ message, with location information.
   """
@@ -373,4 +373,17 @@ defmodule Bottler.Helpers do
 
     if level == :error, do: raise "Aborted release"
   end
+
+  @doc """
+  Get the value at given coordinates inside the given nested structure.
+  The structure must be composed of `Map` and `List`.
+  """
+  def get_nested(data, []), do: data
+  def get_nested(data, [key | rest]) when is_map(data) do
+    data |> Map.get(key) |> get_nested(rest)
+  end
+  def get_nested(data, [key | rest]) when is_list(data) do
+    data |> Enum.at(key) |> get_nested(rest)
+  end
+  def get_nested(_, _), do: nil
 end
