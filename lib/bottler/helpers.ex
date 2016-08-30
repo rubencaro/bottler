@@ -47,7 +47,7 @@ defmodule Bottler.Helpers do
       obj = unquote(obj)
       opts = Keyword.put(opts, :env, __ENV__)
 
-      Alfred.Helpers.maybe_spit(obj, opts, opts[:sample])
+      Bottler.Helpers.maybe_spit(obj, opts, opts[:sample])
       obj  # chainable
     end
   end
@@ -377,6 +377,8 @@ defmodule Bottler.Helpers do
   @doc """
   Get the value at given coordinates inside the given nested structure.
   The structure must be composed of `Map` and `List`.
+
+  If coordinates do not exist `nil` is returned.
   """
   def get_nested(data, []), do: data
   def get_nested(data, [key | rest]) when is_map(data) do
@@ -386,4 +388,48 @@ defmodule Bottler.Helpers do
     data |> Enum.at(key) |> get_nested(rest)
   end
   def get_nested(_, _), do: nil
+  def get_nested(data, keys, default), do: get_nested(data, keys) || default
+
+  @doc """
+  Put given value on given coordinates inside the given structure.
+  Returns updated structure.
+
+  If coordinates do not exist, needed structures are created.
+  """
+  def put_nested(nil, [key], value) when is_integer(key),
+    do: put_nested([], [key], value)
+  def put_nested(nil, [key | _] = keys, value) when is_integer(key),
+    do: put_nested([], keys, value)
+  def put_nested(nil, [key], value),
+    do: put_nested(%{}, [key], value)
+  def put_nested(nil, keys, value),
+    do: put_nested(%{}, keys, value)
+  def put_nested(data, [key], value) when is_map(data) do
+    {_, v} = Map.get_and_update(data, key, &({&1, value}))
+    v
+  end
+  def put_nested(data, [key | rest], value) when is_map(data) do
+    {_, v} = Map.get_and_update(data, key, &({&1, put_nested(&1, rest, value)}))
+    v
+  end
+  def put_nested(data, [key], value) when is_list(data) and is_integer(key) do
+    case List.update_at(data, key, fn(_)-> value end) do
+      ^data -> data |> grow_list(key + 1) |> put_nested([key], value)
+      x -> x
+    end
+  end
+  def put_nested(data, [key | rest] = keys, value) when is_list(data) and is_integer(key) do
+    case List.update_at(data, key, &put_nested(&1, rest, value)) do
+      ^data -> data |> grow_list(key + 1) |> put_nested(keys, value)
+      x -> x
+    end
+  end
+
+  @doc """
+  Fills given list with nils until it is of the given length
+  """
+  def grow_list(list, length) do
+    count = length - Enum.count(list)
+    list ++ List.duplicate(nil, count)
+  end
 end
