@@ -1,3 +1,5 @@
+require Bottler.Helpers, as: H
+
 defmodule Bottler.Helpers.GCE do
 
   @moduledoc """
@@ -5,26 +7,21 @@ defmodule Bottler.Helpers.GCE do
   """
 
   def instances(config) do
-    "gcloud compute instances list"
+    "gcloud compute instances list --format=json"
     |> exec(config)
-    |> String.replace("PREEMPTIBLE", "")  # why that extra column?
-    |> String.replace(~r/[ ]+/, " ")
-    |> String.split("\n")
-    |> List.delete_at(-1)
-    |> CSV.decode(separator: ?\s, headers: true)
-    |> Enum.to_list
+    |> Poison.decode!
   end
 
   def instance_ips(config) do
-    config |> instances |> Enum.map( &(&1["EXTERNAL_IP"]) )
+    config |> instances |> Enum.map( &H.get_nested(&1, ["networkInterfaces", 0, "accessConfigs", 0, "natIP"]) )
   end
 
-  def instance(name, config) do
-    config |> instances |> Enum.find( &(&1["NAME"] == name) )
+  def instance(config, name) do
+    config |> instances |> Enum.find( &(&1["name"] == name) )
   end
 
   defp exec(command, config) do
-    "#{command} --project=#{config[:servers][:gce_project]} | grep -e RUNNING -e MACHINE_TYPE"
+    "#{command} --project=#{config[:servers][:gce_project]}"
     |> to_charlist
     |> :os.cmd
     |> to_string

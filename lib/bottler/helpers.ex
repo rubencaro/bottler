@@ -271,7 +271,9 @@ defmodule Bottler.Helpers do
     config
     |> Bottler.Helpers.GCE.instances
     |> Enum.map(fn(i)->
-      {i["NAME"] |> String.to_atom, [ip: i["EXTERNAL_IP"]]}
+      name = i["name"] |> String.to_atom
+      ip = i |> get_nested(["networkInterfaces", 0, "accessConfigs", 0, "natIP"])
+      {name, [ip: ip]}
     end)
     |> pipe_log("<%= inspect data %>")
   end

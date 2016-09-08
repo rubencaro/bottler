@@ -23,6 +23,6 @@ defmodule Bottler.Mixfile do
 
   defp deps do
     [{:sshex, "~> 2.1"},
-     {:csv, "~> 1.4"}]
+     {:poison, "~> 2.2"}]
   end
 end

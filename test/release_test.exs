@@ -18,7 +18,7 @@ defmodule ReleaseTest do
   test "release gets generated" do
     vsn = Bottler.Mixfile.project[:version]
     apps = [:bottler,:kernel,:stdlib,:elixir,:logger,:crypto,:sasl,:compiler,
-            :ssh,:syntax_tools,:sshex,:parallel_stream,:csv]
+            :ssh,:syntax_tools,:sshex,:poison]
     iapps = [:public_key,:asn1,:iex]
 
     # clean any previous work
