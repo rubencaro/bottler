@@ -10,6 +10,7 @@ defmodule Bottler.Helpers.GCE do
     "gcloud compute instances list --format=json"
     |> exec(config)
     |> Poison.decode!
+    |> match(config[:servers][:match])
   end
 
   def instance_ips(config) do
@@ -18,6 +19,12 @@ defmodule Bottler.Helpers.GCE do
 
   def instance(config, name) do
     config |> instances |> Enum.find( &(&1["name"] == name) )
+  end
+
+  def match(list, nil), do: list
+  def match(list, regexstr) do
+    r = Regex.compile!(regexstr)
+    list |> Enum.filter(&Regex.match?(r, &1["name"]))
   end
 
   defp exec(command, config) do

@@ -216,9 +216,11 @@ Whenever you can use Google's `gcloud` from your computer (i.e. authenticate and
 
 You just do:
 ```elixir
-    servers: [gce_project: "project-id"]
+    servers: [gce_project: "project-id", match: "regexstr"]
 ```
 When you perform an operation on a server, its ip will be obtained using `gcloud` command. You don't need to reserve more static IP addresses for your instances.
+
+Optionally you can give a `match` regex string to default filter server names given by gcloud. Just the same you would give to the `--servers` switch of the tasks. This filter will be added to the one given at the commandline switch. I.e. if you configure `match` and then pass `--servers`, then only servers with a name that matches both regexes will pass.
 
 ## TODOs
 
@@ -236,6 +238,7 @@ When you perform an operation on a server, its ip will be obtained using `gcloud
 
 ### master
 
+* Support for `Regex` on server names
 * Green flag support.
 * Support for forced release branch
 * Log guessed server ips
