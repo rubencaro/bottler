@@ -25,9 +25,13 @@ defmodule Mix.Tasks.Goto do
 
     ip = c[:servers][name][:ip]
 
-    c[:goto][:terminal]
-    |> EEx.eval_string(title: "#{name}", command: "ssh #{c[:remote_user]}@#{ip}")
-    |> to_charlist |> :os.cmd
+    spawn_link(fn->
+      c[:goto][:terminal]
+      |> EEx.eval_string(title: "#{name}", command: "ssh #{c[:remote_user]}@#{ip}")
+      |> to_charlist |> :os.cmd
+    end)
+
+    Process.sleep(2_000)
 
     :ok
   end
