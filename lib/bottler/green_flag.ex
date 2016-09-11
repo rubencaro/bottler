@@ -17,16 +17,16 @@ defmodule Bottler.GreenFlag do
   """
   def green_flag(config) do
     green_flag_config = config[:green_flag] |> H.defaults(timeout: 30_000)
+    servers = config[:servers] |> H.prepare_servers
 
     :ssh.start # just in case
 
-    L.info "Waiting for Green Flag on #{config[:servers] |> Keyword.keys |> Enum.join(",")}..."
+    L.info "Waiting for Green Flag on #{servers |> Enum.map(&(&1[:id])) |> Enum.join(",")}..."
 
     user = config[:remote_user] |> to_charlist
     timeout = green_flag_config[:timeout]
 
-    {sign, _} = config[:servers] |> Keyword.values
-                  |> H.in_tasks( &(check_green_flag(&1, user, timeout)) )
+    {sign, _} = servers |> H.in_tasks( &(check_green_flag(&1, user, timeout)) )
 
     sign
   end
@@ -36,12 +36,12 @@ defmodule Bottler.GreenFlag do
     current = get_current_version(conn)
     expiration = now + timeout
 
-    L.info "Waiting for alive version to be #{current} on #{args[:ip]}..."
+    L.info "Waiting for alive version to be #{current} on #{args[:id]}..."
 
     case wait_for_alive_to_be(conn, current, expiration) do
       :ok -> :ok
       {:timeout, alive} ->
-        L.error "Timeout waiting for alive version to be #{current} on #{args[:ip]}\n"
+        L.error "Timeout waiting for alive version to be #{current} on #{args[:id]}\n"
                 <> "      Alive version was #{alive}"
         :error
     end

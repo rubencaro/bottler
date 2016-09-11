@@ -16,10 +16,12 @@ defmodule Bottler.Restart do
     Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
   """
   def restart(config) do
-    L.info "Restarting #{config[:servers] |> Keyword.keys |> Enum.join(",")}..."
+    servers = config[:servers] |> H.prepare_servers
+
+    L.info "Restarting #{servers |> Enum.map(&(&1[:id])) |> Enum.join(",")}..."
 
     app = Mix.Project.get!.project[:app]
-    config[:servers] |> Keyword.values |> H.in_tasks( fn(args) ->
+    servers |> H.in_tasks( fn(args) ->
         args = args ++ [remote_user: config[:remote_user]]
         "ssh <%= remote_user %>@<%= ip %> 'touch #{app}/tmp/restart'"
           |> EEx.eval_string(args) |> to_charlist |> :os.cmd

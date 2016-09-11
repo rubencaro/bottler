@@ -16,7 +16,8 @@ defmodule Bottler.Exec do
   def exec(config, cmd, switches) do
     :ssh.start # sometimes it's not already started at this point...
 
-    config[:servers] |> Keyword.values # each ip
+    config[:servers]
+    |> H.prepare_servers
     |> Enum.map(fn(s) -> s ++ [ user: config[:remote_user] ] end) # add user
     |> Enum.map(fn(s) -> s ++ [ cmd: cmd, switches: switches ] end) # add cmd and switches
     |> H.in_tasks( fn(args) -> on_server(args) end )
@@ -26,8 +27,9 @@ defmodule Bottler.Exec do
     ip = args[:ip] |> to_charlist
     user = args[:user] |> to_charlist
     cmd = args[:cmd] |> to_charlist
+    id = args[:id]
 
-    L.info "Executing '#{args[:cmd]}' on #{ip}..."
+    L.info "Executing '#{args[:cmd]}' on #{id}..."
 
     {:ok, conn} = S.connect ip: ip, user: user
 
@@ -35,20 +37,20 @@ defmodule Bottler.Exec do
     |> S.stream(cmd, exec_timeout: args[:switches][:timeout])
     |> Enum.each(fn(x)->
       case x do
-        {:stdout,row}    -> process_stdout(ip, row)
-        {:stderr,row}    -> process_stderr(ip, row)
-        {:status,status} -> process_exit_status(ip, status)
-        {:error,reason}  -> process_error(ip, reason)
+        {:stdout,row}    -> process_stdout(id, row)
+        {:stderr,row}    -> process_stderr(id, row)
+        {:status,status} -> process_exit_status(id, status)
+        {:error,reason}  -> process_error(id, reason)
       end
     end)
 
     :ok
   end
 
-  defp process_stdout(ip, row), do: "#{ip}: #{inspect row}" |> L.info
-  defp process_stderr(ip, row), do: "#{ip}: #{inspect row}" |> L.warn
-  defp process_error(ip, reason), do: "#{ip}: Failed, reason: #{inspect reason}" |> L.error
-  defp process_exit_status(ip, status),
-    do: "#{ip}: Ended with status #{inspect status}" |> L.info
+  defp process_stdout(id, row), do: "#{id}: #{inspect row}" |> L.info
+  defp process_stderr(id, row), do: "#{id}: #{inspect row}" |> L.warn
+  defp process_error(id, reason), do: "#{id}: Failed, reason: #{inspect reason}" |> L.error
+  defp process_exit_status(id, status),
+    do: "#{id}: Ended with status #{inspect status}" |> L.info
 
 end

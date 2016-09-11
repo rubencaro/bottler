@@ -266,7 +266,7 @@ defmodule Bottler.Helpers do
     |> Enum.filter(fn({k,_})->
       k = to_string(k)
       names |> Enum.any?(&Regex.match?(&1, k))
-    end)  
+    end)
   end
 
   defp get_gce_server_list(config) do
@@ -280,6 +280,16 @@ defmodule Bottler.Helpers do
       {name, [ip: ip]}
     end)
     |> pipe_log("<%= inspect data %>")
+  end
+
+  @doc """
+    Adds the `name` and a new `id` element to the given servers `Keyword`.
+    It returns a plain list, with a `Keyword` for each server.
+  """
+  def prepare_servers(servers) do
+    servers |> Enum.map(fn({name, values}) ->
+      values ++ [ name: name, id: "#{name}(#{values[:ip]})" ]
+    end)
   end
 
   @doc """

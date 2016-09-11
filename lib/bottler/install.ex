@@ -18,7 +18,8 @@ defmodule Bottler.Install do
   """
   def install(config) do
     :ssh.start # sometimes it's not already started at this point...
-    config[:servers] |> Keyword.values # each ip
+    config[:servers]
+    |> H.prepare_servers
     |> Enum.map(fn(s) -> s ++ [ user: config[:remote_user], additional_folders: config[:additional_folders] ] end) # add user, additional folders
     |> H.in_tasks( fn(args) -> on_server(args) end )
   end
@@ -27,20 +28,21 @@ defmodule Bottler.Install do
     ip = args[:ip] |> to_charlist
     user = args[:user] |> to_charlist
 
-    L.info "Installing #{Mix.Project.get!.project[:version]} on #{ip}..."
+    L.info "Installing #{Mix.Project.get!.project[:version]} on #{args[:id]}..."
 
     {:ok, conn} = S.connect ip: ip, user: user
 
-    place_files conn, user, ip, args[:additional_folders]
-    make_current conn, user, ip
-    cleanup_old_releases conn, user, ip
+    {conn, user, ip, args}
+    |> place_files
+    |> make_current
+    |> cleanup_old_releases
     :ok
   end
 
   # Decompress release file, put it in place, and make needed movements
   #
-  defp place_files(conn, user, ip, additional_folders) do
-    L.info "Settling files on #{ip}..."
+  defp place_files({conn, user, ip, opts}) do
+    L.info "Settling files on #{opts[:id]}..."
     vsn = Mix.Project.get!.project[:version]
     app = Mix.Project.get!.project[:app]
     path = '/home/#{user}/#{app}/'
@@ -60,33 +62,34 @@ defmodule Bottler.Install do
     S.cmd! conn,
         'ln -sfn #{path}releases/#{vsn}/lib/#{app}-#{vsn}/scripts ' ++
         '#{path}releases/#{vsn}/scripts'
-    additional_folders
+    opts[:additional_folders]
       |> Enum.each(fn(folder) ->
         S.cmd! conn,
             'ln -sfn #{path}releases/#{vsn}/lib/#{app}-#{vsn}/#{folder} ' ++
             '#{path}releases/#{vsn}/#{folder}'
       end)
+    {conn, user, ip, opts}
   end
 
-  defp make_current(conn, user, ip) do
-    L.info "Marking release as current on #{ip}..."
+  defp make_current({conn, user, ip, opts}) do
     app = Mix.Project.get!.project[:app]
     vsn = Mix.Project.get!.project[:version]
-    {:ok, _, 0} = S.run conn,
-                            'ln -sfn /home/#{user}/#{app}/releases/#{vsn} ' ++
-                            ' /home/#{user}/#{app}/current'
+    L.info "Marking '#{vsn}' as current on #{opts[:id]}..."
+    {:ok, _, 0} = S.run conn,'ln -sfn /home/#{user}/#{app}/releases/#{vsn} ' ++
+                             '/home/#{user}/#{app}/current'
+    {conn, user, ip, opts}
   end
 
-  defp cleanup_old_releases(conn, user, ip) do
-    L.info "Cleaning up old releases on #{ip}..."
+  defp cleanup_old_releases({conn, user, ip, opts}) do
     app = Mix.Project.get!.project[:app]
     {:ok, res, 0} = S.run conn, 'ls -t /home/#{user}/#{app}/releases'
     excess_releases = res |> String.split("\n") |> Enum.slice(5..-2)
 
     for r <- excess_releases do
-      L.info "Cleaning up old #{r}..."
+      L.info "Cleaning up old #{r} on #{opts[:id]}..."
       {:ok, _, 0} = S.run conn, 'rm -fr /home/#{user}/#{app}/releases/#{r}'
     end
+    {conn, user, ip, opts}
   end
 
 end

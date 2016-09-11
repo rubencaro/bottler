@@ -238,6 +238,8 @@ Optionally you can give a `match` regex string to default filter server names gi
 
 ### master
 
+* Log using server names
+* Fix some `scp` glitches when shipping between servers
 * Support for `Regex` on server names
 * Green flag support.
 * Support for forced release branch
