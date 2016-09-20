@@ -24,7 +24,7 @@ fi
 touch $alive # ensure existence
 
 # start in an erlang VM
-cmd="erl -boot $dir/boot/start -config $dir/boot/sys -env ERL_LIBS $dir/lib"
+cmd="erl -boot $dir/boot/start -config $dir/boot/sys -env ERL_LIBS $dir/lib +P 134217727"
 cmd="$cmd -name ${app}_at_${name}@127.0.0.1 -setcookie $cookie -noshell"
 
 echo "$(date) Running: $cmd" >> $log
