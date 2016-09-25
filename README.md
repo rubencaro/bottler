@@ -224,6 +224,7 @@ Optionally you can give a `match` regex string to default filter server names gi
 
 ## TODOs
 
+* Use [distillery](https://github.com/bitwalker/distillery)
 * Add more testing
 * Separate section for documenting every configuration option
 * Get it stable on production
