@@ -60,6 +60,7 @@ On your config:
                                          server2: [ip: "1.1.1.2"]],
                                remote_user: "produser",
                                cookie: "secretcookie",
+                               max_processes: 262144,
                                additional_folders: ["docs"],
                                ship: [timeout: 60_000,
                                       method: :scp],
@@ -71,6 +72,7 @@ On your config:
 * `servers` - list of servers to deploy on.
 * `remote_user` - user name to log in.
 * `cookie` - distributed Erlang cookie.
+* `max_processes` - maximum number of processes allowed on ErlangVM ([see here](http://erlang.org/doc/man/erl.html#max_processes)). Defaults to `262144`.
 * `additional_folders` - additional folders to include in the release under
    the `lib` folder.
 * `ship` - options for the `ship` task
@@ -239,6 +241,7 @@ Optionally you can give a `match` regex string to default filter server names gi
 
 ### master
 
+* Configurable `max_processes`
 * Log using server names
 * Fix some `scp` glitches when shipping between servers
 * Support for `Regex` on server names

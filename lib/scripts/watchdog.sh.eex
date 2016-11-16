@@ -9,6 +9,7 @@
 app="<%= app %>"
 user="<%= user %>"
 cookie="<%= cookie %>"
+max_processes="<%= max_processes %>"
 name="$(hostname)"
 dir="/home/$user/$app/current"
 log="$dir/log/$app.log"
@@ -24,7 +25,7 @@ fi
 touch $alive # ensure existence
 
 # start in an erlang VM
-cmd="erl -boot $dir/boot/start -config $dir/boot/sys -env ERL_LIBS $dir/lib +P 134217727"
+cmd="erl -boot $dir/boot/start -config $dir/boot/sys -env ERL_LIBS $dir/lib +P $max_processes"
 cmd="$cmd -name ${app}_at_${name}@127.0.0.1 -setcookie $cookie -noshell"
 
 echo "$(date) Running: $cmd" >> $log
