@@ -241,6 +241,7 @@ Optionally you can give a `match` regex string to default filter server names gi
 
 ### master
 
+* Remove 1.4 warnings
 * Configurable `max_processes`
 * Log using server names
 * Fix some `scp` glitches when shipping between servers
