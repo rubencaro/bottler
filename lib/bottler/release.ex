@@ -20,14 +20,14 @@ defmodule Bottler.Release do
     L.info "Generating release tar.gz ..."
     File.rm_rf! "rel"
     File.mkdir_p! "rel"
-    generate_rel_file
-    generate_config_file
+    generate_rel_file()
+    generate_config_file()
     generate_tar_file config
     :ok
   end
 
   defp generate_rel_file,
-    do: H.write_term("rel/#{Mix.Project.get!.project[:app]}.rel", get_rel_term)
+    do: H.write_term("rel/#{Mix.Project.get!.project[:app]}.rel", get_rel_term())
 
   defp generate_tar_file(config) do
     app = Mix.Project.get!.project[:app] |> to_charlist
@@ -58,7 +58,7 @@ defmodule Bottler.Release do
     File.mkdir_p! dest_path
 
     # render script templates
-    scripts = get_all_scripts
+    scripts = get_all_scripts()
     renders = scripts
               |> Enum.filter(fn({_,v})-> String.match?(v,~r/\.eex$/) end)
               |> Enum.map(fn({k,v})-> { k, EEx.eval_file(v,vars) } end)
@@ -107,7 +107,7 @@ defmodule Bottler.Release do
   end
 
   defp get_deps_term do
-    {apps, iapps} = get_all_apps
+    {apps, iapps} = get_all_apps()
 
     iapps
     |> Enum.map(fn({n,v}) -> {n,v,:load} end)
@@ -122,7 +122,7 @@ defmodule Bottler.Release do
     {:release,
       {app, vsn},
       {:erts, :erlang.system_info(:version)},
-      get_deps_term }
+      get_deps_term() }
   end
 
   # Get info for every compiled app's from its app file
@@ -145,7 +145,7 @@ defmodule Bottler.Release do
   # compiled, and then detected here.
   #
   defp get_all_apps do
-    app_files_info = read_all_app_files
+    app_files_info = read_all_app_files()
 
     # a list of all apps ever needed or included
     needed = [:kernel, :stdlib, :elixir, :sasl, :compiler, :syntax_tools]

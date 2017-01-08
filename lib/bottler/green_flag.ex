@@ -34,7 +34,7 @@ defmodule Bottler.GreenFlag do
   defp check_green_flag(args, user, timeout) do
     conn = connect(args, user)
     current = get_current_version(conn)
-    expiration = now + timeout
+    expiration = now() + timeout
 
     L.info "Waiting for alive version to be #{current} on #{args[:id]}..."
 
@@ -55,7 +55,7 @@ defmodule Bottler.GreenFlag do
 
   defp wait_for_alive_to_be(conn, current, expiration) do
     :timer.sleep 1_000
-    case {get_alive_version(conn), now} do
+    case {get_alive_version(conn), now()} do
       {^current, _} -> :ok
       {v, ts} when ts > expiration -> {:timeout, v}
       _ -> wait_for_alive_to_be(conn, current, expiration)

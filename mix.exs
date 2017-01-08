@@ -5,9 +5,9 @@ defmodule Bottler.Mixfile do
     [app: :bottler,
      version: "0.5.0",
      elixir: ">= 1.0.0",
-     package: package,
+     package: package(),
      description: "Help you bottle, ship and serve your Elixir apps.",
-     deps: deps]
+     deps: deps()]
   end
 
   def application do

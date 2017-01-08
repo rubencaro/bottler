@@ -60,8 +60,8 @@ defmodule Bottler.Helpers do
 
   defp do_spit(obj, opts) do
     %{file: file, line: line} = opts[:env]
-    name = Process.info(self)[:registered_name]
-    chain = [ :bright, :red, "\n\n#{file}:#{line}", :normal, "\n     #{inspect self}", :green," #{name}"]
+    name = Process.info(self())[:registered_name]
+    chain = [ :bright, :red, "\n\n#{file}:#{line}", :normal, "\n     #{inspect self()}", :green," #{name}"]
 
     msg = inspect(obj, opts)
     chain = chain ++ [:red, "\n\n#{msg}"]
