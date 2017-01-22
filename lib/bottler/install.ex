@@ -24,7 +24,7 @@ defmodule Bottler.Install do
       s ++ [user: config[:remote_user],
             additional_folders: config[:additional_folders]]
     end) # add user, additional folders
-    |> H.in_tasks(fn(args) -> on_server(args) end)
+    |> H.in_tasks(&on_server(&1))
   end
 
   defp on_server(args) do
@@ -35,64 +35,90 @@ defmodule Bottler.Install do
 
     {:ok, conn} = S.connect ip: ip, user: user
 
-    {conn, user, ip, args}
+    conn
+    |> build_data(user, args)
     |> place_files
     |> make_current
     |> cleanup_old_releases
+
     :ok
   end
 
   # Decompress release file, put it in place, and make needed movements
   #
-  defp place_files({conn, user, ip, opts}) do
+  defp place_files(%{opts: opts} = all) do
     L.info "Settling files on #{opts[:id]}..."
+
+    all
+    |> make_paths
+    |> extract_release
+    |> wire_release
+    |> wire_additional_folders
+
+    all
+  end
+
+  defp build_data(conn, user, opts) do
     vsn = Mix.Project.get!.project[:version]
     app = Mix.Project.get!.project[:app]
     path = '/home/#{user}/#{app}/'
-    S.cmd! conn, 'mkdir -p #{path}releases/#{vsn}'
-    S.cmd! conn, 'mkdir -p #{path}log'
-    S.cmd! conn, 'mkdir -p #{path}tmp'
-    {:ok, _, 0} = S.run conn,
-        'tar --directory #{path}releases/#{vsn}/ ' ++
-        '-xf /tmp/#{app}.tar.gz'
-    S.cmd! conn, 'ln -sfn #{path}tmp ' ++
-                   '#{path}releases/#{vsn}/tmp'
-    S.cmd! conn, 'ln -sfn #{path}log ' ++
-                   '#{path}releases/#{vsn}/log'
-    S.cmd! conn,
-        'ln -sfn #{path}releases/#{vsn}/releases/#{vsn} ' ++
-        '#{path}releases/#{vsn}/boot'
-    S.cmd! conn,
-        'ln -sfn #{path}releases/#{vsn}/lib/#{app}-#{vsn}/scripts ' ++
-        '#{path}releases/#{vsn}/scripts'
-    opts[:additional_folders]
-      |> Enum.each(fn(folder) ->
-        S.cmd! conn,
-            'ln -sfn #{path}releases/#{vsn}/lib/#{app}-#{vsn}/#{folder} ' ++
-            '#{path}releases/#{vsn}/#{folder}'
-      end)
-    {conn, user, ip, opts}
+    rpath = '#{path}releases/#{vsn}'
+
+    %{conn: conn, path: path, rpath: rpath, vsn: vsn,
+      app: app, user: user, opts: opts}
   end
 
-  defp make_current({conn, user, ip, opts}) do
-    app = Mix.Project.get!.project[:app]
-    vsn = Mix.Project.get!.project[:version]
-    L.info "Marking '#{vsn}' as current on #{opts[:id]}..."
-    {:ok, _, 0} = S.run conn,'ln -sfn /home/#{user}/#{app}/releases/#{vsn} ' ++
-                             '/home/#{user}/#{app}/current'
-    {conn, user, ip, opts}
+  defp make_paths(%{conn: c, path: p, rpath: r} = all) do
+    S.cmd! c, 'mkdir -p #{r}'
+    S.cmd! c, 'mkdir -p #{p}log'
+    S.cmd! c, 'mkdir -p #{p}tmp'
+    all
   end
 
-  defp cleanup_old_releases({conn, user, ip, opts}) do
-    app = Mix.Project.get!.project[:app]
-    {:ok, res, 0} = S.run conn, 'ls -t /home/#{user}/#{app}/releases'
+  defp extract_release(%{conn: c, rpath: r, app: a} = all) do
+    {:ok, _, 0} = S.run c, 'tar --directory #{r} -xf /tmp/#{a}.tar.gz'
+    all
+  end
+
+  defp wire_release(all) do
+    all
+    |> wire_global_into_release
+    |> wire_release_into_global
+  end
+
+  defp wire_global_into_release(%{conn: c, path: p, rpath: r} = all) do
+    S.cmd! c, 'ln -sfn #{p}tmp #{r}/tmp'
+    S.cmd! c, 'ln -sfn #{p}log #{r}/log'
+    all
+  end
+
+  defp wire_release_into_global(%{conn: c, rpath: r, vsn: v, app: a} = all) do
+    S.cmd! c, 'ln -sfn #{r}/releases/#{v} #{r}/boot'
+    S.cmd! c, 'ln -sfn #{r}/lib/#{a}-#{v}/scripts #{r}/scripts'
+    all
+  end
+
+  defp wire_additional_folders(%{conn: c, rpath: r, vsn: v, app: a, opts: o}) do
+    o[:additional_folders]
+    |> Enum.each(fn(folder) ->
+      S.cmd! c, 'ln -sfn #{r}/lib/#{a}-#{v}/#{folder} #{r}/#{folder}'
+    end)
+  end
+
+  defp make_current(%{conn: c, vsn: v, path: p, rpath: r, opts: o} = all) do
+    L.info "Marking '#{v}' as current on #{o[:id]}..."
+    {:ok, _, 0} = S.run c,'ln -sfn #{r} #{p}current'
+    all
+  end
+
+  defp cleanup_old_releases(%{conn: c, path: p, opts: o}) do
+    {:ok, res, 0} = S.run c, 'ls -t #{p}releases'
     excess_releases = res |> String.split("\n") |> Enum.slice(5..-2)
 
     for r <- excess_releases do
-      L.info "Cleaning up old #{r} on #{opts[:id]}..."
-      {:ok, _, 0} = S.run conn, 'rm -fr /home/#{user}/#{app}/releases/#{r}'
+      L.info "Cleaning up old #{r} on #{o[:id]}..."
+      {:ok, _, 0} = S.run c, 'rm -fr #{p}releases/#{r}'
     end
-    {conn, user, ip, opts}
   end
 
 end

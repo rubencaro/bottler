@@ -60,7 +60,9 @@ defmodule Bottler.Ship do
 
   defp upload_to(servers, opts, task_opts) do
     servers
-    |> H.in_tasks(&(&1 |> K.merge(opts) |> run_scp),  task_opts)
+    |> H.in_tasks(fn s ->
+      s |> K.merge(opts) |> run_scp
+    end,  task_opts)
   end
 
   defp get_ids_string(servers) do
