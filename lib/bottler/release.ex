@@ -54,20 +54,29 @@ defmodule Bottler.Release do
             user: config[:remote_user],
             cookie: config[:cookie],
             max_processes: config[:max_processes] || 262_144]
+
     dest_path = "#{Mix.Project.app_path}/scripts"
     File.mkdir_p! dest_path
 
-    # render script templates
     scripts = get_all_scripts()
-    renders = scripts
-              |> Enum.filter(fn({_,v}) -> String.match?(v,~r/\.eex$/) end)
-              |> Enum.map(fn({k,v}) -> {k, EEx.eval_file(v,vars)} end)
+    renders = render_scripts(scripts, vars)
+    copy_scripts(scripts, dest_path)
+    save_renders(renders, dest_path)
+  end
 
-    # copy scripts
-    for {f,v} <- scripts, do: :ok = File.cp v, "#{dest_path}/#{f}"
-    # save renders over them
+  defp render_scripts(scripts, vars) do
+    scripts
+    |> Enum.filter(fn({_,v}) -> String.match?(v,~r/\.eex$/) end)
+    |> Enum.map(fn({k,v}) -> {k, EEx.eval_file(v,vars)} end)
+  end
+
+  defp copy_scripts(scripts, path) do
+    for {f,v} <- scripts, do: :ok = File.cp v, "#{path}/#{f}"
+  end
+
+  defp save_renders(renders, path) do
     for {f,body} <- renders,
-      do: :ok = File.write "#{dest_path}/#{f}", body, [:write]
+      do: :ok = File.write "#{path}/#{f}", body, [:write]
   end
 
   # copy additional folders to the destination folder to be included in the tar file
@@ -129,8 +138,8 @@ defmodule Bottler.Release do
   # Get info for every compiled app's from its app file
   #
   defp read_all_app_files do
-    infos = :os.cmd('find -L _build/#{Mix.env} -name *.app')
-            |> to_string |> String.split
+    infos = "find -L _build/#{Mix.env} -name *.app"
+      |> to_charlist |> :os.cmd |> to_string |> String.split
 
     for path <- infos do
       {:ok,[{_,name,data}]} = path |> H.read_terms
@@ -146,39 +155,49 @@ defmodule Bottler.Release do
   # compiled, and then detected here.
   #
   defp get_all_apps do
-    app_files_info = read_all_app_files()
-
-    # a list of all apps ever needed or included
-    needed = [:kernel, :stdlib, :elixir, :sasl, :compiler, :syntax_tools]
-    all = app_files_info
-      |> Enum.reduce([apps: needed, iapps: []],
-      fn({n, _, a, ia}, [apps: apps, iapps: iapps]) ->
-        ia = if ia == nil, do: [], else: ia
-        apps = Enum.concat([apps, [n], a, ia])
-        iapps = Enum.concat(iapps, ia)
-        [apps: apps, iapps: iapps]
-      end)
-
-    # load all of them, see what version they are on
-    for a <- (all[:apps] ++ all[:iapps]), do: :ok = load(a)
+    all = get_all_apps_plain_list()
+    versions = get_versions(all)
 
     # get own included applications
     own_iapps = Mix.Project.get!.application
                 |> Keyword.get(:included_applications, [])
 
-    # get loaded app's versions
-    versions = for {n, _, v} <- :application.info[:loaded], do: {n, v}
-
     only_included = all[:iapps]
-        |> Enum.reject(&(&1 in all[:apps]))
-        |> :erlang.++(own_iapps) # own included are only included
-        |> add_version_info(versions)
+      |> Enum.reject(&(&1 in all[:apps]))
+      |> :erlang.++(own_iapps) # own included are only included
+      |> add_version_info(versions)
 
     apps = all[:apps] |> Enum.uniq
-          |> :erlang.--(own_iapps) # do not start own included
-          |> add_version_info(versions)
+      |> :erlang.--(own_iapps) # do not start own included
+      |> add_version_info(versions)
 
     {apps, only_included}
+  end
+
+  defp get_versions(apps) do
+    load_apps(apps)
+    for {n, _, v} <- :application.info[:loaded], do: {n, v}
+  end
+
+  # load all of them, see what version they are on
+  #
+  defp load_apps(apps) do
+    for a <- (apps[:apps] ++ apps[:iapps]), do: :ok = load(a)
+  end
+
+  # a list of all apps ever needed or included
+  #
+  defp get_all_apps_plain_list do
+    needed = [:kernel, :stdlib, :elixir, :sasl, :compiler, :syntax_tools]
+
+    read_all_app_files()
+    |> Enum.reduce([apps: needed, iapps: []],
+    fn({n, _, a, ia}, [apps: apps, iapps: iapps]) ->
+      ia = if ia == nil, do: [], else: ia
+      apps = Enum.concat([apps, [n], a, ia])
+      iapps = Enum.concat(iapps, ia)
+      [apps: apps, iapps: iapps]
+    end)
   end
 
   defp add_version_info(apps,versions) do

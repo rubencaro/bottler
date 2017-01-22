@@ -1,6 +1,7 @@
 require Logger, as: L
 require Bottler.Helpers, as: H
 alias SSHEx, as: S
+alias Keyword, as: K
 
 defmodule Bottler.Exec do
 
@@ -24,17 +25,15 @@ defmodule Bottler.Exec do
   end
 
   defp on_server(args) do
-    ip = args[:ip] |> to_charlist
-    user = args[:user] |> to_charlist
-    cmd = args[:cmd] |> to_charlist
+    args = clean_args(args)
     id = args[:id]
 
     L.info "Executing '#{args[:cmd]}' on #{id}..."
 
-    {:ok, conn} = S.connect ip: ip, user: user
+    {:ok, conn} = S.connect ip: args[:ip], user: args[:user]
 
     conn
-    |> S.stream(cmd, exec_timeout: args[:switches][:timeout])
+    |> S.stream(args[:cmd], exec_timeout: args[:switches][:timeout])
     |> Enum.each(fn(x) ->
       case x do
         {:stdout, row}    -> process_stdout(id, row)
@@ -45,6 +44,13 @@ defmodule Bottler.Exec do
     end)
 
     :ok
+  end
+
+  defp clean_args(args) do
+    args
+    |> K.put(:ip, args[:ip] |> to_charlist)
+    |> K.put(:user, args[:user] |> to_charlist)
+    |> K.put(:cmd, args[:cmd] |> to_charlist)
   end
 
   defp process_stdout(id, row), do: "#{id}: #{inspect row}" |> L.info
