@@ -2,6 +2,9 @@ require Bottler.Helpers, as: H
 require Logger, as: L
 
 defmodule Mix.Tasks.Observer do
+  @moduledoc """
+  Task module for the Observer command
+  """
   use Mix.Task
 
   def run(args) do

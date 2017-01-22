@@ -26,7 +26,7 @@ defmodule Bottler.GreenFlag do
     user = config[:remote_user] |> to_charlist
     timeout = green_flag_config[:timeout]
 
-    {sign, _} = servers |> H.in_tasks( &(check_green_flag(&1, user, timeout)) )
+    {sign, _} = servers |> H.in_tasks(&check_green_flag(&1, user, timeout))
 
     sign
   end

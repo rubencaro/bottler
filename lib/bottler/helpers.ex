@@ -2,6 +2,9 @@ require Logger, as: L
 alias Keyword, as: K
 
 defmodule Bottler.Helpers do
+  @moduledoc """
+  Generic helpers module
+  """
 
   @doc """
     Parses given args using OptionParser with given opts.
@@ -21,7 +24,7 @@ defmodule Bottler.Helpers do
     `Application.get_env( :myapp, :blah, :blah)` noise.
   """
   def env(key, default \\ nil), do: env(:bottler, key, default)
-  def env(app, key, default), do: Application.get_env(app, key, default)
+  def env(appl, key, default), do: Application.get_env(appl, key, default)
 
   @doc """
     Get current app's name
@@ -59,26 +62,45 @@ defmodule Bottler.Helpers do
   end
 
   defp do_spit(obj, opts) do
+    opts = Keyword.merge([pretty: true], opts)
+
     %{file: file, line: line} = opts[:env]
     name = Process.info(self())[:registered_name]
-    chain = [ :bright, :red, "\n\n#{file}:#{line}", :normal, "\n     #{inspect self()}", :green," #{name}"]
+    chain = [:bright, :red, "\n\n#{file}:#{line}", :green,
+        "\n   #{DateTime.utc_now |> DateTime.to_string}",
+        :red, :normal, "  #{inspect self()}", :green," #{name}"]
 
     msg = inspect(obj, opts)
     chain = chain ++ [:red, "\n\n#{msg}"]
 
-    (chain ++ ["\n\n", :reset]) |> IO.ANSI.format(true) |> IO.puts
+    chain = chain ++ ["\n\n", :reset]
+
+    chain |> IO.ANSI.format(true) |> IO.puts
   end
 
   @doc """
-  Print to stdout a _TODO_ message, with location information.
+    Print to stdout a _TODO_ message, with location information.
   """
   defmacro todo(msg \\ "") do
     quote do
       %{file: file, line: line} = __ENV__
-      [ :yellow, "\nTODO: #{file}:#{line} #{unquote(msg)}\n", :reset]
+      [:yellow, "\nTODO: #{file}:#{line} #{unquote(msg)}\n", :reset]
       |> IO.ANSI.format(true)
       |> IO.puts
       :todo
+    end
+  end
+
+  @doc """
+    Print to stdout a _DEPRECATED_ message, with location information.
+  """
+  defmacro deprecated(msg \\ "") do
+    quote do
+      %{file: file, line: line} = __ENV__
+      [:yellow, "\nDEPRECATED: #{file}:#{line} #{unquote(msg)}\n", :reset]
+      |> IO.ANSI.format(true)
+      |> IO.puts
+      :deprecated
     end
   end
 
@@ -185,7 +207,7 @@ defmodule Bottler.Helpers do
   defp is_ok_response_for_10_and_11(res) do
     case res do
       :ok -> true
-      x when is_list(x) -> Enum.all?([:logger,:bottler], fn(i)-> i in res end)
+      x when is_list(x) -> Enum.all?([:logger, :bottler], &(&1 in res))
       _ -> false
     end
   end
@@ -195,13 +217,13 @@ defmodule Bottler.Helpers do
     Raises an error if anything looks wrong.
   """
   def read_and_validate_config do
-    c = [ scripts_folder: ".bottler/scripts",
-          into_path_folder: "~/.local/bin",
-          remote_port: 22,
-          additional_folders: [],
-          ship: [],
-          green_flag: [],
-          goto: [terminal: "terminator -T '<%= title %>' -e '<%= command %>' &"] ]
+    c = [scripts_folder: ".bottler/scripts",
+         into_path_folder: "~/.local/bin",
+         remote_port: 22,
+         additional_folders: [],
+         ship: [],
+         green_flag: [],
+         goto: [terminal: "terminator -T '<%= title %>' -e '<%= command %>' &"]]
         |> K.merge(Application.get_env(:bottler, :params))
 
     if not is_valid_servers_list?(c[:servers]),
@@ -227,19 +249,19 @@ defmodule Bottler.Helpers do
     |> to_charlist
     |> :os.cmd
     |> to_string
-    |> String.replace("\n","")
+    |> String.replace("\n", "")
     |> Kernel.==(branch)
   end
 
   defp is_valid_servers_list?(s) do
-    K.keyword?(s) and ( is_gce_servers?(s) or is_default_servers?(s) )
+    K.keyword?(s) and (is_gce_servers?(s) or is_default_servers?(s))
   end
 
   defp is_default_servers?(s),
-    do: Enum.all?(s, fn({_,v})-> :ip in K.keys(v) end)
+    do: Enum.all?(s, fn {_, v} -> :ip in K.keys(v) end)
 
   defp is_gce_servers?(s),
-    do: match?(%{gce_project: _} , Enum.into(s,%{}))
+    do: match?(%{gce_project: _} , Enum.into(s, %{}))
 
   defp get_servers_type(s) do
     case is_gce_servers?(s) do
@@ -279,7 +301,7 @@ defmodule Bottler.Helpers do
   defp inline_filter_servers(servers, switch) when is_binary(switch) do
     names = switch |> String.split(",") |> Enum.map(&Regex.compile!(&1))
     servers
-    |> Enum.filter(fn({k,_})->
+    |> Enum.filter(fn {k, _} ->
       k = to_string(k)
       names |> Enum.any?(&Regex.match?(&1, k))
     end)
@@ -290,7 +312,7 @@ defmodule Bottler.Helpers do
 
     config
     |> Bottler.Helpers.GCE.instances
-    |> Enum.map(fn(i)->
+    |> Enum.map(fn i ->
       name = i["name"] |> String.to_atom
       ip = i |> get_nested(["networkInterfaces", 0, "accessConfigs", 0, "natIP"])
       {name, [ip: ip]}
@@ -303,8 +325,8 @@ defmodule Bottler.Helpers do
     It returns a plain list, with a `Keyword` for each server.
   """
   def prepare_servers(servers) do
-    servers |> Enum.map(fn({name, values}) ->
-      values ++ [ name: name, id: "#{name}(#{values[:ip]})" ]
+    servers |> Enum.map(fn {name, values} ->
+      values ++ [name: name, id: "#{name}(#{values[:ip]})"]
     end)
   end
 
@@ -347,7 +369,7 @@ defmodule Bottler.Helpers do
     Run given command through `Mix.Shell`
   """
   def cmd(command) do
-    case Mix.Shell.cmd(command, &(IO.write(&1)) ) do
+    case Mix.Shell.cmd(command, &IO.write(&1)) do
       0 -> :ok
       _ -> {:error, "Release step failed. Please fix any errors and try again."}
     end
@@ -360,7 +382,7 @@ defmodule Bottler.Helpers do
   def full_ls(path) do
     expanded = Path.expand(path)
     case path |> File.ls do
-      {:ok, list} -> Enum.map(list,&( "#{expanded}/#{&1}" ))
+      {:ok, list} -> Enum.map(list, &("#{expanded}/#{&1}"))
       _ -> []
     end
   end
@@ -389,7 +411,7 @@ defmodule Bottler.Helpers do
     local_release = :erlang.system_info(:version) |> to_string
 
     remote_releases = config[:servers] |> K.values
-      |> in_tasks( fn(args)->
+      |> in_tasks(fn args ->
         user = config[:remote_user] |> to_charlist
         ip = args[:ip] |> to_charlist
         {:ok, conn} = SSHEx.connect(ip: ip, user: user)
@@ -401,11 +423,21 @@ defmodule Bottler.Helpers do
       |> elem(1)
       |> Enum.map(&elem(&1, 1))
 
-    level = if Enum.all?(remote_releases, &( local_release == &1 |> String.split(" ") |> List.first )), do: :info, else: :error
+    level = guess_level(remote_releases, local_release)
 
     L.log level, "Compiling against Erlang/OTP release #{local_release}. Remote releases are #{Enum.map_join(remote_releases, ", ", &(&1))}."
 
     if level == :error, do: raise "Aborted release"
+  end
+
+  defp guess_level(remote_releases, local_release) do
+    remote_releases
+    |> Enum.map(&(&1 |> String.split(" ") |> List.first))
+    |> Enum.all?(&(&1 == local_release))
+    |> case do
+      true -> :info
+      false -> :error
+    end
   end
 
   @doc """

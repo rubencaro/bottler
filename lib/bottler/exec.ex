@@ -18,9 +18,9 @@ defmodule Bottler.Exec do
 
     config[:servers]
     |> H.prepare_servers
-    |> Enum.map(fn(s) -> s ++ [ user: config[:remote_user] ] end) # add user
-    |> Enum.map(fn(s) -> s ++ [ cmd: cmd, switches: switches ] end) # add cmd and switches
-    |> H.in_tasks( fn(args) -> on_server(args) end )
+    |> Enum.map(fn(s) -> s ++ [user: config[:remote_user]] end) # add user
+    |> Enum.map(fn(s) -> s ++ [cmd: cmd, switches: switches] end) # add cmd and switches
+    |> H.in_tasks(fn(args) -> on_server(args) end)
   end
 
   defp on_server(args) do
@@ -35,12 +35,12 @@ defmodule Bottler.Exec do
 
     conn
     |> S.stream(cmd, exec_timeout: args[:switches][:timeout])
-    |> Enum.each(fn(x)->
+    |> Enum.each(fn(x) ->
       case x do
-        {:stdout,row}    -> process_stdout(id, row)
-        {:stderr,row}    -> process_stderr(id, row)
-        {:status,status} -> process_exit_status(id, status)
-        {:error,reason}  -> process_error(id, reason)
+        {:stdout, row}    -> process_stdout(id, row)
+        {:stderr, row}    -> process_stderr(id, row)
+        {:status, status} -> process_exit_status(id, status)
+        {:error, reason}  -> process_error(id, reason)
       end
     end)
 

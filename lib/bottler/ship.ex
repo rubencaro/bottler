@@ -23,7 +23,7 @@ defmodule Bottler.Ship do
   end
 
   defp scp_shipment(config, servers, ship_config) do
-    L.info "Shipping to #{servers |> Enum.map(&(&1[:id])) |> Enum.join(",")} using straight SCP..."
+    L.info "Shipping to #{get_ids_string(servers)} using straight SCP..."
 
     task_opts = [expected: [], timeout: ship_config[:timeout]]
 
@@ -31,32 +31,40 @@ defmodule Bottler.Ship do
               app: Mix.Project.get!.project[:app]]
 
     servers
-    |> H.in_tasks( &(&1 |> K.merge(common) |> run_scp), task_opts)
+    |> H.in_tasks(&(&1 |> K.merge(common) |> run_scp), task_opts)
     |> H.labelled_to_string
   end
 
   defp remote_scp_shipment(config, servers, ship_config) do
-    L.info "Shipping to #{servers |> Enum.map(&(&1[:id])) |> Enum.join(",")} using remote SCP..."
-
-    task_opts = [expected: [], timeout: ship_config[:timeout]]
-
-    common = [remote_user: config[:remote_user],
-              app: Mix.Project.get!.project[:app]]
+    L.info "Shipping to #{get_ids_string(servers)} using remote SCP..."
 
     [first | rest] = servers
+    task_opts = [expected: [], timeout: ship_config[:timeout]]
+    common = [remote_user: config[:remote_user],
+              app: Mix.Project.get!.project[:app]]
+    common_rest = common
+      |> K.merge(src_ip: first[:ip],
+                 srcpath: "/tmp/#{common[:app]}.tar.gz",
+                 method: :remote_scp)
 
     # straight scp to first remote
     L.info "Uploading release to #{first[:id]}..."
-    [first] |> H.in_tasks( &(&1 |> K.merge(common) |> run_scp),  task_opts)
+    upload_to([first], common, task_opts)
 
     # scp from there to the rest
-    L.info "Distributing release from #{first[:id]} to #{Enum.map_join(rest, ",", &(&1[:id]))}..."
-    common_rest = common |> K.merge(src_ip: first[:ip],
-                                    srcpath: "/tmp/#{common[:app]}.tar.gz",
-                                    method: :remote_scp)
+    L.info "Distributing release from #{first[:id]} to #{get_ids_string(rest)}..."
     rest
-    |> H.in_tasks( &(&1 |> K.merge(common_rest) |> run_scp), task_opts)
+    |> upload_to(common_rest, task_opts)
     |> H.labelled_to_string
+  end
+
+  defp upload_to(servers, opts, task_opts) do
+    servers
+    |> H.in_tasks(&(&1 |> K.merge(opts) |> run_scp),  task_opts)
+  end
+
+  defp get_ids_string(servers) do
+    servers |> Enum.map_join(",", &(&1[:id]))
   end
 
   defp get_scp_template(method) do

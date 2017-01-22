@@ -20,8 +20,11 @@ defmodule Bottler.Install do
     :ssh.start # sometimes it's not already started at this point...
     config[:servers]
     |> H.prepare_servers
-    |> Enum.map(fn(s) -> s ++ [ user: config[:remote_user], additional_folders: config[:additional_folders] ] end) # add user, additional folders
-    |> H.in_tasks( fn(args) -> on_server(args) end )
+    |> Enum.map(fn(s) ->
+      s ++ [user: config[:remote_user],
+            additional_folders: config[:additional_folders]]
+    end) # add user, additional folders
+    |> H.in_tasks(fn(args) -> on_server(args) end)
   end
 
   defp on_server(args) do

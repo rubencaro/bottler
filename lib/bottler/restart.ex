@@ -22,10 +22,12 @@ defmodule Bottler.Restart do
 
     app = Mix.Project.get!.project[:app]
     servers
-    |> H.in_tasks( fn(args) ->
+    |> H.in_tasks(fn(args) ->
         args = args ++ [remote_user: config[:remote_user]]
+
         "ssh <%= remote_user %>@<%= ip %> 'touch #{app}/tmp/restart'"
-          |> EEx.eval_string(args) |> to_charlist |> :os.cmd
+        |> EEx.eval_string(args)
+        |> to_charlist |> :os.cmd
     end, expected: [])
     |> H.labelled_to_string
   end

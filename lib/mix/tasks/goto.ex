@@ -22,7 +22,7 @@ defmodule Mix.Tasks.Goto do
 
     args
     |> get_names(c)
-    |> Enum.map(&open_terminal(&1, c))
+    |> Enum.each(&open_terminal(&1, c))
 
     Process.sleep(2_000)
 
@@ -43,7 +43,7 @@ defmodule Mix.Tasks.Goto do
 
     ip = config[:servers][name][:ip]
 
-    spawn_link(fn->
+    spawn_link(fn ->
       config[:goto][:terminal]
       |> EEx.eval_string(title: "#{name}", command: "ssh #{config[:remote_user]}@#{ip}")
       |> to_charlist |> :os.cmd

@@ -53,15 +53,15 @@ defmodule Bottler.Release do
     vars = [app: Mix.Project.get!.project[:app],
             user: config[:remote_user],
             cookie: config[:cookie],
-            max_processes: config[:max_processes] || 262144]
+            max_processes: config[:max_processes] || 262_144]
     dest_path = "#{Mix.Project.app_path}/scripts"
     File.mkdir_p! dest_path
 
     # render script templates
     scripts = get_all_scripts()
     renders = scripts
-              |> Enum.filter(fn({_,v})-> String.match?(v,~r/\.eex$/) end)
-              |> Enum.map(fn({k,v})-> { k, EEx.eval_file(v,vars) } end)
+              |> Enum.filter(fn({_,v}) -> String.match?(v,~r/\.eex$/) end)
+              |> Enum.map(fn({k,v}) -> {k, EEx.eval_file(v,vars)} end)
 
     # copy scripts
     for {f,v} <- scripts, do: :ok = File.cp v, "#{dest_path}/#{f}"
@@ -100,8 +100,7 @@ defmodule Bottler.Release do
     for f <- (bfiles ++ pfiles), into: %{}, do: {Path.basename(f,".eex"), f}
   end
 
-  # TODO: ensure paths
-  #
+  H.todo "ensure paths"
   defp generate_config_file do
     H.write_term "rel/sys.config", Mix.Config.read!("config/config.exs")
   end
@@ -119,10 +118,12 @@ defmodule Bottler.Release do
     app = mixf.project[:app] |> to_charlist
     vsn = mixf.project[:version] |> to_charlist
 
-    {:release,
+    {
+      :release,
       {app, vsn},
       {:erts, :erlang.system_info(:version)},
-      get_deps_term() }
+      get_deps_term()
+    }
   end
 
   # Get info for every compiled app's from its app file
@@ -149,26 +150,27 @@ defmodule Bottler.Release do
 
     # a list of all apps ever needed or included
     needed = [:kernel, :stdlib, :elixir, :sasl, :compiler, :syntax_tools]
-    all = app_files_info |> Enum.reduce([apps: needed, iapps: []],
-              fn({n,_,a,ia},[apps: apps, iapps: iapps]) ->
-                ia = if ia == nil, do: [], else: ia
-                apps = Enum.concat([apps,[n],a,ia])
-                iapps = Enum.concat(iapps,ia)
-                [apps: apps, iapps: iapps]
-              end )
+    all = app_files_info
+      |> Enum.reduce([apps: needed, iapps: []],
+      fn({n, _, a, ia}, [apps: apps, iapps: iapps]) ->
+        ia = if ia == nil, do: [], else: ia
+        apps = Enum.concat([apps, [n], a, ia])
+        iapps = Enum.concat(iapps, ia)
+        [apps: apps, iapps: iapps]
+      end)
 
     # load all of them, see what version they are on
-    for a <- ( all[:apps] ++ all[:iapps] ), do: :ok = load(a)
+    for a <- (all[:apps] ++ all[:iapps]), do: :ok = load(a)
 
     # get own included applications
     own_iapps = Mix.Project.get!.application
                 |> Keyword.get(:included_applications, [])
 
     # get loaded app's versions
-    versions = for {n,_,v} <- :application.info[:loaded], do: {n,v}
+    versions = for {n, _, v} <- :application.info[:loaded], do: {n, v}
 
     only_included = all[:iapps]
-        |> Enum.reject(&( &1 in all[:apps] ))
+        |> Enum.reject(&(&1 in all[:apps]))
         |> :erlang.++(own_iapps) # own included are only included
         |> add_version_info(versions)
 

@@ -14,11 +14,13 @@ defmodule Bottler.Helpers.GCE do
   end
 
   def instance_ips(config) do
-    config |> instances |> Enum.map( &H.get_nested(&1, ["networkInterfaces", 0, "accessConfigs", 0, "natIP"]) )
+    config
+    |> instances
+    |> Enum.map(&H.get_nested(&1, ["networkInterfaces", 0, "accessConfigs", 0, "natIP"]))
   end
 
   def instance(config, name) do
-    config |> instances |> Enum.find( &(&1["name"] == name) )
+    config |> instances |> Enum.find(&(&1["name"] == name))
   end
 
   def match(list, nil), do: list
