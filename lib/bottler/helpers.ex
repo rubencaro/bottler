@@ -103,31 +103,47 @@ defmodule Bottler.Helpers do
     Run given function in different Tasks. One `Task` for each entry on given
     list. Each entry on list will be given as args for the function.
 
-    Explodes if `timeout` is reached waiting for any particular task to end.
+    Returns a tuple `{global_sign, results}`.
 
-    Once run, each return value from each task is compared with `expected`.
-    It returns `{:ok, results}` if _every_ task returned as expected.
+    Being `global_sign` either `:ok` or `:error`, depending on the results
+    of all tasks as a whole. And being `results` a list with the result for
+    each task in the form of `{:ok, result}` or `{:error, reason}`
 
-    If any task did not return as expected, then it returns `{:error, results}`.
-
-    If `to_s` is `true` then results are fed to `to_string` before return.
-    This is useful when returned value is a char list and is to be printed to
-    stdout.
+    Once every task is run, `global_sign` is determined by comparing each
+    return value from each task with given `expected` (`:ok` by default).
+    It will be `:ok` if _every_ task returned as expected. `:error` otherwise.
   """
   def in_tasks(list, fun, opts \\ []) do
-    expected = opts |> K.get(:expected, :ok)
-    timeout = opts |> K.get(:timeout, 60_000)
-    to_s = opts |> K.get(:to_s, false)
+    opts = Keyword.merge([expected: :ok, timeout: 60_000], opts)
 
-    # run and get results
-    tasks = for args <- list, into: [], do: Task.async(fn -> fun.(args) end)
-    results = for t <- tasks, into: [], do: Task.await(t, timeout)
+    # run in tasks
+    tasks = for args <- list do
+        Task.async(fn ->
+          try do fun.(args) rescue e -> {:error, e} catch e -> {:error, e} end
+        end)
+      end
 
-    # figure out return value
-    sign = if Enum.all?(results, &(&1 == expected)), do: :ok, else: :error
-    if to_s, do: {sign, to_string(results)},
-        else: {sign, results}
+    # get results, format them, and clean up
+    results = tasks |> Task.yield_many(opts[:timeout])  # get results within timeout
+      |> Enum.map(fn {task, res} ->
+        case res || Task.shutdown(task, :brutal_kill) do # kill remaining tasks
+          nil -> {:error, "Timeout after #{opts[:timeout]}msecs"}  # label timeout errors
+          {:ok, {:error, r}} -> {:error, r}  # label caught errors
+          x -> x
+        end
+      end)
+
+    # figure out global sign
+    sign = if Enum.all?(results, &(elem(&1, 1) == opts[:expected])),
+              do: :ok, else: :error
+
+    {sign, results}
   end
+
+  @doc """
+  Useful to ease results processing as a big string.
+  """
+  def labelled_to_string({label, any}), do: {label, to_string(any)}
 
   @doc """
     Set up `prod` environment variables. Be careful, it only applies to newly
@@ -372,7 +388,7 @@ defmodule Bottler.Helpers do
 
     local_release = :erlang.system_info(:version) |> to_string
 
-    {_, remote_releases} = config[:servers] |> K.values
+    remote_releases = config[:servers] |> K.values
       |> in_tasks( fn(args)->
         user = config[:remote_user] |> to_charlist
         ip = args[:ip] |> to_charlist
@@ -381,7 +397,9 @@ defmodule Bottler.Helpers do
         SSHEx.cmd!(conn, cmd)
         |> String.replace(~r/[\n\r\\"]/, "")
         |> Kernel.<>(" on #{ip}")
-      end, to_s: false)
+      end)
+      |> elem(1)
+      |> Enum.map(&elem(&1, 1))
 
     level = if Enum.all?(remote_releases, &( local_release == &1 |> String.split(" ") |> List.first )), do: :info, else: :error
 
@@ -392,7 +410,7 @@ defmodule Bottler.Helpers do
 
   @doc """
   Get the value at given coordinates inside the given nested structure.
-  The structure must be composed of `Map` and `List`.
+  The structure must be composed of `Map`, `Keyword` and `List`.
 
   If coordinates do not exist `nil` is returned.
   """
@@ -400,52 +418,241 @@ defmodule Bottler.Helpers do
   def get_nested(data, [key | rest]) when is_map(data) do
     data |> Map.get(key) |> get_nested(rest)
   end
-  def get_nested(data, [key | rest]) when is_list(data) do
+  def get_nested([{_key, _value} | _rest] = data, [key | rest]) when is_atom(key) do
+    data |> Keyword.get(key) |> get_nested(rest)
+  end
+  def get_nested(data, [key | rest]) when is_list(data) and is_integer(key) do
     data |> Enum.at(key) |> get_nested(rest)
   end
   def get_nested(_, _), do: nil
   def get_nested(data, keys, default), do: get_nested(data, keys) || default
 
   @doc """
-  Put given value on given coordinates inside the given structure.
+  Put given `value` on given coordinates inside the given structure.
+  The structure must be composed of `Map`, `Keyword` and `List`.
   Returns updated structure.
+
+  `value` can be a function that will be run only when the value is needed.
 
   If coordinates do not exist, needed structures are created.
   """
-  def put_nested(nil, [key], value) when is_integer(key),
+  def put_nested(nil, [key], value) when is_integer(key) or is_atom(key),
     do: put_nested([], [key], value)
-  def put_nested(nil, [key | _] = keys, value) when is_integer(key),
+  def put_nested(nil, [key | _] = keys, value) when is_integer(key) or is_atom(key),
     do: put_nested([], keys, value)
   def put_nested(nil, [key], value),
     do: put_nested(%{}, [key], value)
   def put_nested(nil, keys, value),
     do: put_nested(%{}, keys, value)
+
+  def put_nested(data, [key], value) when is_function(value),
+    do: put_nested(data, [key], value.())
   def put_nested(data, [key], value) when is_map(data) do
     {_, v} = Map.get_and_update(data, key, &({&1, value}))
     v
   end
+  def put_nested([], [key], value) when is_atom(key),
+    do: Keyword.put([], key, value)
+  def put_nested([{_key, _value} | _rest] = data, [key], value) when is_atom(key) do
+    {_, v} = Keyword.get_and_update(data, key, &({&1, value}))
+    v
+  end
+  def put_nested(data, [key], value) when is_list(data) and is_integer(key) do
+    case Enum.count(data) <= key do
+      true -> data |> grow_list(key + 1) |> put_nested([key], value)
+      false -> List.update_at(data, key, fn(_) -> value end)
+    end
+  end
+  # `data` is not a `Map`, `Keyword` or `List`, so it's already a replaceable value.
+  def put_nested(_data, [key], value), do: put_nested(nil, [key], value)
+
   def put_nested(data, [key | rest], value) when is_map(data) do
     {_, v} = Map.get_and_update(data, key, &({&1, put_nested(&1, rest, value)}))
     v
   end
-  def put_nested(data, [key], value) when is_list(data) and is_integer(key) do
-    case List.update_at(data, key, fn(_)-> value end) do
-      ^data -> data |> grow_list(key + 1) |> put_nested([key], value)
-      x -> x
-    end
+  def put_nested([{_key, _value} | _rest] = data, [key | rest], value) when is_atom(key) do
+    {_, v} = Keyword.get_and_update(data, key, &({&1, put_nested(&1, rest, value)}))
+    v
   end
   def put_nested(data, [key | rest] = keys, value) when is_list(data) and is_integer(key) do
-    case List.update_at(data, key, &put_nested(&1, rest, value)) do
-      ^data -> data |> grow_list(key + 1) |> put_nested(keys, value)
-      x -> x
+    case Enum.count(data) <= key do
+      true -> data |> grow_list(key + 1) |> put_nested(keys, value)
+      false -> List.update_at(data, key, &put_nested(&1, rest, value))
+    end
+  end
+
+  @doc """
+  Updates given coordinates inside the given structure with given `fun`.
+  The structure must be composed of `Map`, `Keyword` and `List`.
+  Returns updated structure.
+
+  `fun` must be a function. It will be passed the previous value, or `nil`.
+
+  If coordinates do not exist, needed structures are created.
+  """
+  def update_nested(data, keys, fun) when is_function(fun),
+    do: put_nested(data, keys, fun.(get_nested(data, keys)))
+
+  @doc """
+  Drops whatever is on given coordinates inside given structure.
+  The structure must be composed of `Map, `Keyword` and `List`.
+  Returns the updated structure.
+
+  If coordinates do not exist nothing bad happens.
+
+      iex> %{a: [%{b: 123}, "hey"]} |> Alfred.Helpers.drop_nested([:a, 0, :c])
+      %{a: [%{b: 123}, "hey"]}
+      iex> %{a: [%{b: 123, c: [:thing]}, "hey"]} |> Alfred.Helpers.drop_nested([:a, 0, :c])
+      %{a: [%{b: 123}, "hey"]}
+      iex> %{a: [%{b: 123, c: [:thing]}, "hey"]} |> Alfred.Helpers.drop_nested([:a])
+      %{}
+
+      iex> %{a: [[b: 123], "hey"]} |> Alfred.Helpers.drop_nested([:a, 0, :c])
+      %{a: [[b: 123], "hey"]}
+      iex> %{a: [[b: 123, c: [:thing]], "hey"]} |> Alfred.Helpers.drop_nested([:a, 0, :c])
+      %{a: [[b: 123], "hey"]}
+
+  """
+  def drop_nested(data, [key]) when is_map(data), do: Map.drop(data, [key])
+  def drop_nested(data, [key]) when is_list(data) and is_atom(key),
+    do: Keyword.drop(data, [key])
+  def drop_nested(data, [key]) when is_list(data), do: List.delete_at(data, key)
+  def drop_nested(data, keys), do: drop_nested(data, keys, data, keys)
+
+  def drop_nested(data, [key, last], orig, keys) do
+    next = data |> get_nested([key])
+    case next |> has_key?(last) do
+      false -> orig
+      true -> put_nested(orig, Enum.drop(keys, -1), drop_nested(next, [last]))
+    end
+  end
+  def drop_nested(data, [key | rest], orig, keys) when is_map(data) do
+    data |> Map.get(key) |> drop_nested(rest, orig, keys)
+  end
+  def drop_nested(data, [key | rest], orig, keys) when is_list(data) and is_atom(key) do
+    data |> Keyword.get(key) |> drop_nested(rest, orig, keys)
+  end
+  def drop_nested(data, [key | rest], orig, keys) when is_list(data) do
+    data |> Enum.at(key) |> drop_nested(rest, orig, keys)
+  end
+
+  @doc """
+  Version of `Map.has_key?/2` that can also be used for `List` and `Keyword`.
+  Useful when you must work with a combination of `Map`, `Keyword` and `List`
+
+      iex> %{a: 1, b: 2} |> Alfred.Helpers.has_key?(:a)
+      true
+      iex> %{a: 1, b: 2} |> Alfred.Helpers.has_key?(:c)
+      false
+
+      iex> [a: 1, b: 2] |> Alfred.Helpers.has_key?(:a)
+      true
+      iex> [a: 1, b: 2] |> Alfred.Helpers.has_key?(:c)
+      false
+
+      iex> [:a, :b] |> Alfred.Helpers.has_key?(1)
+      true
+      iex> [:a, :b] |> Alfred.Helpers.has_key?(2)
+      false
+
+  """
+  def has_key?(data, key) when is_map(data), do: Map.has_key?(data, key)
+  def has_key?([{_key, _value} | _rest] = data, key) when is_atom(key),
+    do: Keyword.has_key?(data, key)
+  def has_key?(data, key) when is_list(data) and is_integer(key),
+    do: Enum.count(data) > key
+
+  @doc """
+  Pushes given `thing` into a List on given coordinates inside given structure.
+  The structure must be composed of `Map`, `Keyword` and `List`.
+  Returns the updated structure.
+
+  If a List already exists on given coordinates, `thing` is pushed onto it.
+  If there is nothing on given coordinates, a single element List is created.
+  If coordinates do not exist, needed structures are created.
+  `{:error, reason}` is returned if there is anything other than a List on given
+  coordinates, or anything else fails.
+
+      iex> %{a: [%{b: 123}, "hey"]} |> Alfred.Helpers.push_nested([:a, 0, :c], :thing)
+      %{a: [%{b: 123, c: [:thing]}, "hey"]}
+      iex> %{a: [%{b: 123}, "hey"]} |> Alfred.Helpers.push_nested([:a], :thing)
+      %{a: [%{b: 123}, "hey", :thing]}
+      iex> %{a: %{b: 123}} |> Alfred.Helpers.push_nested([:a], :thing)
+      {:error, :not_a_list}
+
+      iex> [a: [[b: 123], "hey"]] |> Alfred.Helpers.push_nested([:a, 0, :c], :thing)
+      [a: [[c: [:thing], b: 123], "hey"]]
+
+  """
+  def push_nested(nil, keys, value), do: put_nested(nil, keys, [value])
+  def push_nested(data, [key], value) do
+    case get_nested(data, [key]) do
+      nil -> put_nested(data, [key], [value])
+      list when is_list(list) -> put_nested(data, [key], list ++ [value])
+      _ -> {:error, :not_a_list}
+    end
+  end
+  def push_nested(data, [key | rest], value) when is_map(data) do
+    {_, v} = Map.get_and_update(data, key, &({&1, push_nested(&1, rest, value)}))
+    v
+  end
+  def push_nested(data, [key | rest], value) when is_list(data) and is_atom(key) do
+    {_, v} = Keyword.get_and_update(data, key, &({&1, push_nested(&1, rest, value)}))
+    v
+  end
+  def push_nested(data, [key | rest] = keys, value) when is_list(data) and is_integer(key) do
+    case Enum.at(data, key) do
+      nil -> data |> grow_list(key + 1) |> push_nested(keys, value)
+      _ -> List.update_at(data, key, &push_nested(&1, rest, value))
+    end
+  end
+
+  @doc """
+  Just like `put_nested/3` but only replaces the value on last coordinate level
+  if there is no previous value. Intermediate levels are traversed or created as needed.
+  The structure must be composed of `Map`, `Keyword` and `List`.
+  """
+  def merge_nested(nil, keys, value), do: put_nested(nil, keys, value)
+  def merge_nested(data, [key], value) do
+    case get_nested(data, [key]) do
+      nil -> put_nested(data, [key], value)
+      _ -> data
+    end
+  end
+  def merge_nested(data, [key | rest], value) when is_map(data) do
+    {_, v} = Map.get_and_update(data, key, &({&1, merge_nested(&1, rest, value)}))
+    v
+  end
+  def merge_nested(data, [key | rest], value) when is_list(data) and is_atom(key) do
+    {_, v} = Keyword.get_and_update(data, key, &({&1, merge_nested(&1, rest, value)}))
+    v
+  end
+  def merge_nested(data, [key | rest] = keys, value) when is_list(data) and is_integer(key) do
+    case Enum.at(data, key) do
+      nil -> data |> grow_list(key + 1) |> merge_nested(keys, value)
+      _ -> List.update_at(data, key, &merge_nested(&1, rest, value))
     end
   end
 
   @doc """
   Fills given list with nils until it is of the given length
+
+    iex> require Alfred.Helpers, as: H
+    iex> H.grow_list([], 3)
+    [nil, nil, nil]
+    iex> H.grow_list([1, 2], 3)
+    [1, 2, nil]
+    iex> H.grow_list([1, 2, 3], 3)
+    [1, 2, 3]
+    iex> H.grow_list([1, 2, 3, 4], 3)
+    [1, 2, 3, 4]
+
   """
   def grow_list(list, length) do
     count = length - Enum.count(list)
-    list ++ List.duplicate(nil, count)
+    case count > 0 do
+      true -> list ++ List.duplicate(nil, count)
+      false -> list
+    end
   end
 end

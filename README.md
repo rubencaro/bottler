@@ -230,17 +230,22 @@ Optionally you can give a `match` regex string to default filter server names gi
 * Add more testing
 * Separate section for documenting every configuration option
 * Get it stable on production
+* Get it decent enough to be published
 * Complete README
 * Rollback to _any_ previous version
-* Optionally include `erts` (now we can ship openssl too see [here](http://www.erlang.org/download/otp_src_17.4.readme))
-* Allow hot code swap (just follow [this](http://erlang.org/doc/design_principles/release_handling.html) to prepare the release, and then provide an example of [Harakiri](http://github.com/rubencaro/harakiri) action that actually performs the upgrade)
+* Support for hot code upgrades, and other non basic features of `distillery`
 * Support for hooks
 * Add support for deploy to AWS instances [*](https://github.com/gleber/erlcloud)[*](notes/aws.md)
+* Maybe get it to 1.0, remove `BETA` tag, and actually support other users.
 
 ## Changelog
 
 ### master
 
+### 0.8.0
+
+* Add coverage analysis and `credo`
+* Better `in_tasks`
 * Remove 1.4 warnings
 * Configurable `max_processes`
 * Log using server names

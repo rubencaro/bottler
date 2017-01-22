@@ -21,11 +21,13 @@ defmodule Bottler.Restart do
     L.info "Restarting #{servers |> Enum.map(&(&1[:id])) |> Enum.join(",")}..."
 
     app = Mix.Project.get!.project[:app]
-    servers |> H.in_tasks( fn(args) ->
+    servers
+    |> H.in_tasks( fn(args) ->
         args = args ++ [remote_user: config[:remote_user]]
         "ssh <%= remote_user %>@<%= ip %> 'touch #{app}/tmp/restart'"
           |> EEx.eval_string(args) |> to_charlist |> :os.cmd
-      end, expected: [], to_s: true)
+    end, expected: [])
+    |> H.labelled_to_string
   end
 
 end

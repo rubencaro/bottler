@@ -25,19 +25,20 @@ defmodule Bottler.Ship do
   defp scp_shipment(config, servers, ship_config) do
     L.info "Shipping to #{servers |> Enum.map(&(&1[:id])) |> Enum.join(",")} using straight SCP..."
 
-    task_opts = [expected: [], to_s: true, timeout: ship_config[:timeout]]
+    task_opts = [expected: [], timeout: ship_config[:timeout]]
 
     common = [remote_user: config[:remote_user],
               app: Mix.Project.get!.project[:app]]
 
-
-    servers |> H.in_tasks( &(&1 |> K.merge(common) |> run_scp), task_opts)
+    servers
+    |> H.in_tasks( &(&1 |> K.merge(common) |> run_scp), task_opts)
+    |> H.labelled_to_string
   end
 
   defp remote_scp_shipment(config, servers, ship_config) do
     L.info "Shipping to #{servers |> Enum.map(&(&1[:id])) |> Enum.join(",")} using remote SCP..."
 
-    task_opts = [expected: [], to_s: true, timeout: ship_config[:timeout]]
+    task_opts = [expected: [], timeout: ship_config[:timeout]]
 
     common = [remote_user: config[:remote_user],
               app: Mix.Project.get!.project[:app]]
@@ -53,7 +54,9 @@ defmodule Bottler.Ship do
     common_rest = common |> K.merge(src_ip: first[:ip],
                                     srcpath: "/tmp/#{common[:app]}.tar.gz",
                                     method: :remote_scp)
-    rest |> H.in_tasks( &(&1 |> K.merge(common_rest) |> run_scp), task_opts)
+    rest
+    |> H.in_tasks( &(&1 |> K.merge(common_rest) |> run_scp), task_opts)
+    |> H.labelled_to_string
   end
 
   defp get_scp_template(method) do
