@@ -14,11 +14,11 @@ defmodule Mix.Tasks.Bottler.Exec do
   use Mix.Task
 
   def run(args) do
-    {switches, remaining_args} = H.parse_args!(args, switches: [timeout: :integer])
+    {parsed_switches, remaining_args} = H.parse_args!(args, switches: [timeout: :integer])
 
     # clean args
     cmd = remaining_args |> List.first  # the first non-switch argument
-    switches = switches |> H.defaults(timeout: 30_000)
+    switches = parsed_switches |> H.defaults(timeout: 30_000)
 
     H.set_prod_environment
     c = H.read_and_validate_config |> H.inline_resolve_servers(switches)

@@ -25,7 +25,7 @@ defmodule Bottler.Mixfile do
 
   defp deps do
     [{:sshex, ">= 2.1.2"},
-     {:credo, "~> 0.4", only: [:dev, :test]},
+     {:credo, "~> 0.6", only: [:dev, :test]},
      {:ex_doc, ">= 0.0.0", only: :dev},
      {:poison, "~> 2.2"}]
   end

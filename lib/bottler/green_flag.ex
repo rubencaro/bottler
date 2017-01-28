@@ -64,12 +64,12 @@ defmodule Bottler.GreenFlag do
 
   defp get_current_version(conn) do
     cmd = "readlink #{H.app}/current | cut -d'/' -f 6" |> to_charlist
-    SSHEx.cmd!(conn, cmd) |> H.chop
+    conn |> SSHEx.cmd!(cmd) |> H.chop
   end
 
   defp get_alive_version(conn) do
     cmd = "cat #{H.app}/tmp/alive" |> to_charlist
-    SSHEx.cmd!(conn, cmd) |> H.chop
+    conn |> SSHEx.cmd!(cmd) |> H.chop
   end
 
   defp now, do: System.system_time(:milliseconds)

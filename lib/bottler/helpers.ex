@@ -46,9 +46,8 @@ defmodule Bottler.Helpers do
   """
   defmacro spit(obj \\ "", opts \\ []) do
     quote do
-      opts = unquote(opts)
+      opts = Keyword.put(unquote(opts), :env, __ENV__)
       obj = unquote(obj)
-      opts = Keyword.put(opts, :env, __ENV__)
 
       Bottler.Helpers.maybe_spit(obj, opts, opts[:sample])
       obj  # chainable
@@ -66,16 +65,14 @@ defmodule Bottler.Helpers do
 
     %{file: file, line: line} = opts[:env]
     name = Process.info(self())[:registered_name]
-    chain = [:bright, :red, "\n\n#{file}:#{line}", :green,
-        "\n   #{DateTime.utc_now |> DateTime.to_string}",
-        :red, :normal, "  #{inspect self()}", :green," #{name}"]
-
     msg = inspect(obj, opts)
-    chain = chain ++ [:red, "\n\n#{msg}"]
 
-    chain = chain ++ ["\n\n", :reset]
-
-    chain |> IO.ANSI.format(true) |> IO.puts
+    [:bright, :red, "\n\n#{file}:#{line}", :green,
+     "\n   #{DateTime.utc_now |> DateTime.to_string}",
+     :red, :normal, "  #{inspect self()}", :green," #{name}",
+     :red, "\n\n#{msg}\n\n", :reset]
+    |> IO.ANSI.format(true)
+    |> IO.puts
   end
 
   @doc """
@@ -291,7 +288,7 @@ defmodule Bottler.Helpers do
   """
   def inline_resolve_servers(config), do: inline_resolve_servers(config, [])
   def inline_resolve_servers(config, switches) do
-    servers_list = guess_server_list(config)
+    servers_list = config |> guess_server_list
       |> inline_filter_servers(switches[:servers])
 
     config |> Keyword.put(:servers, servers_list)
@@ -408,7 +405,7 @@ defmodule Bottler.Helpers do
   def check_erts_versions(config) do
     :ssh.start # just in case
 
-    local_release = :erlang.system_info(:version) |> to_string
+    local_release = :version |> :erlang.system_info |> to_string
 
     remote_releases = config[:servers] |> K.values
       |> in_tasks(fn args ->
@@ -416,7 +413,8 @@ defmodule Bottler.Helpers do
         ip = args[:ip] |> to_charlist
         {:ok, conn} = SSHEx.connect(ip: ip, user: user)
         cmd = "source ~/.bash_profile && erl -eval 'erlang:display(erlang:system_info(version)), halt().'  -noshell" |> to_charlist
-        SSHEx.cmd!(conn, cmd)
+        conn
+        |> SSHEx.cmd!(cmd)
         |> String.replace(~r/[\n\r\\"]/, "")
         |> Kernel.<>(" on #{ip}")
       end)

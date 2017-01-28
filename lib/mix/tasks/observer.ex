@@ -20,28 +20,39 @@ defmodule Mix.Tasks.Observer do
     L.info "Target IP: #{ip}"
     L.info "Server name: #{name}"
 
-    port = get_port(c, name, ip)
+    open_tunnel(c, name, ip)
 
-    # auto closing tunnel
-    :os.cmd('killall epmd') # free distributed erlang port
-    cmd = "ssh -L 4369:localhost:4369 -L #{port}:localhost:#{port} #{c[:remote_user]}@#{ip}" |> to_charlist
-    IO.puts "Opening tunnel... \n#{cmd}"
-    spawn fn -> :os.cmd(cmd) |> to_string |> IO.puts end
-    :timer.sleep 1000
-    node_name = erlang_node_name(name)
-
-    # observer
-    IO.puts "Starting observer..."
-    cmd = "elixir --name observerunique@127.0.0.1 --cookie #{c[:cookie]} --no-halt #{__DIR__}/../../../lib/mix/scripts/observer.exs #{node_name}" |> to_charlist
-    IO.puts cmd
-    :os.cmd(cmd) |> to_string |> IO.puts
+    start_observer(c, name)
 
     IO.puts "Done"
   end
 
+  defp start_observer(c, name) do
+    node_name = erlang_node_name(name)
+
+    IO.puts "Starting observer..."
+    cmd = "elixir --name observerunique@127.0.0.1 --cookie #{c[:cookie]} --no-halt #{__DIR__}/../../../lib/mix/scripts/observer.exs #{node_name}" |> to_charlist
+    IO.puts cmd
+    cmd |> :os.cmd |> to_string |> IO.puts
+  end
+
+  defp open_tunnel(c, name, ip) do
+    port = get_port(c, name, ip)
+    :os.cmd('killall epmd') # free distributed erlang port
+
+    # auto closing tunnel
+    tunnel_cmd = "ssh -L 4369:localhost:4369 -L #{port}:localhost:#{port} #{c[:remote_user]}@#{ip}" |> to_charlist
+
+    IO.puts "Opening tunnel... \n#{tunnel_cmd}"
+    spawn fn -> tunnel_cmd |> :os.cmd |> to_string |> IO.puts end
+
+    :timer.sleep 1000
+  end
+
   defp get_port(c, server_name, ip) do
-    cmd = "ssh #{c[:remote_user]}@#{ip} \"source /home/#{c[:remote_user]}/.bash_profile && epmd -names\" | grep #{server_name} | cut -d \" \" -f 5"
-    :os.cmd(cmd |> to_charlist) |> to_string |> String.strip(?\n)
+    "ssh #{c[:remote_user]}@#{ip} \"source /home/#{c[:remote_user]}/.bash_profile && epmd -names\" | grep #{server_name} | cut -d \" \" -f 5"
+    |> to_charlist
+    |> :os.cmd |> to_string |> String.strip(?\n)
   end
 
   defp erlang_node_name(server_name) do
