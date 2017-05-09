@@ -126,37 +126,82 @@ defmodule Bottler.Helpers do
 
     Being `global_sign` either `:ok` or `:error`, depending on the results
     of all tasks as a whole. And being `results` a list with the result for
-    each task in the form of `{:ok, result}` or `{:error, reason}`
+    each task in the form of `{item, :ok, result}` or `{item, :error, reason}`
 
     Once every task is run, `global_sign` is determined by comparing each
     return value from each task with given `expected` (`:ok` by default).
     It will be `:ok` if _every_ task returned as expected. `:error` otherwise.
   """
-  def in_tasks(list, fun, opts \\ []) do
+  def in_tasks(args_list, fun, opts \\ []) do
     opts = Keyword.merge([expected: :ok, timeout: 60_000], opts)
 
-    # run in tasks
-    tasks = for args <- list do
-        Task.async(fn ->
-          try do fun.(args) rescue e -> {:error, e} catch e -> {:error, e} end
-        end)
-      end
+    args_by_task = args_list
+      |> run_in_tasks(fun)
 
-    # get results, format them, and clean up
-    results = tasks |> Task.yield_many(opts[:timeout])  # get results within timeout
-      |> Enum.map(fn {task, res} ->
-        case res || Task.shutdown(task, :brutal_kill) do # kill remaining tasks
-          nil -> {:error, "Timeout after #{opts[:timeout]}msecs"}  # label timeout errors
-          {:ok, {:error, r}} -> {:error, r}  # label caught errors
-          x -> x
-        end
-      end)
+    args_results_tuples = args_by_task
+      |> Map.keys
+      |> Task.yield_many(opts[:timeout]) # get results within timeout
+      |> format_yield_results(args_by_task)
 
     # figure out global sign
-    sign = if Enum.all?(results, &(elem(&1, 1) == opts[:expected])),
-              do: :ok, else: :error
+    sign = determine_sign(args_results_tuples, opts[:expected])
 
-    {sign, results}
+    {sign, args_results_tuples}
+  end
+
+  defp run_in_tasks(args_list, fun) do
+    args_list
+    |> Enum.reduce(%{}, fn(args, acc) ->
+      Map.put(acc, run_in_task(fun, args), args)
+    end)
+  end
+
+  defp run_in_task(fun, args) do
+    Task.async(fn ->
+      try do
+        fun.(args)
+      rescue
+        e -> {:caught_error, e}
+      catch
+        e -> {:caught_error, e}
+      end
+    end)
+  end
+
+  defp format_yield_results(results, args_by_task) do
+    Enum.map(results, fn({task, result}) ->
+      args_for_task = args_by_task[task]
+
+      format_yield_result({task, result}, args_for_task)
+    end)
+  end
+
+  defp format_yield_result({task, result}, task_args) do
+    case result || Task.shutdown(task, :brutal_kill) do # kill remaining tasks
+      nil -> {task_args, {:error, "Timeout"}}  # label timeout errors
+      {:exit, reason} -> {task_args, {:error, reason}}
+      {:ok, {:caught_error, r}} -> {task_args, {:error, r}}  # label caught errors
+      x -> {task_args, x}
+    end
+  end
+
+  defp determine_sign(results, expected) do
+    if results_match?(results, expected) do
+      :ok
+    else
+      :error
+    end
+  end
+
+  defp results_match?(results, expected) do
+    Enum.all?(results,
+      fn({_args, result}) ->
+        result_matches?(elem(result, 1), expected)
+      end)
+  end
+
+  defp result_matches?(result, expected_result) do
+    match?(^result, expected_result)
   end
 
   @doc """
