@@ -448,4 +448,14 @@ defmodule Bottler.Helpers do
     count = length - Enum.count(list)
     list ++ List.duplicate(nil, count)
   end
+
+  @doc """
+  Method applies a function against element if condition is true.
+  """
+  def run_if(elem, condition, fun) do
+    cond do
+      condition -> fun.(elem)
+      true -> elem
+    end
+  end
 end
