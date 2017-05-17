@@ -59,6 +59,7 @@ On your config:
     config :bottler, :params, [servers: [server1: [ip: "1.1.1.1"],
                                          server2: [ip: "1.1.1.2"]],
                                remote_user: "produser",
+                               rsa_pass_phrase: "passphrase",
                                cookie: "secretcookie",
                                max_processes: 262144,
                                additional_folders: ["docs"],
@@ -71,6 +72,7 @@ On your config:
 
 * `servers` - list of servers to deploy on.
 * `remote_user` - user name to log in.
+* `rsa_pass_phrase` - pass phrase for your SSH keys (We recommend not to put it on plain text here. `System.get_env("RSA_PASS_PHRASE")` would do.).
 * `cookie` - distributed Erlang cookie.
 * `max_processes` - maximum number of processes allowed on ErlangVM ([see here](http://erlang.org/doc/man/erl.html#max_processes)). Defaults to `262144`.
 * `additional_folders` - additional folders to include in the release under
