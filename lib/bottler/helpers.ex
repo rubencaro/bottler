@@ -575,16 +575,16 @@ defmodule Bottler.Helpers do
 
   If coordinates do not exist nothing bad happens.
 
-      iex> %{a: [%{b: 123}, "hey"]} |> Alfred.Helpers.drop_nested([:a, 0, :c])
+      iex> %{a: [%{b: 123}, "hey"]} |> Bottler.Helpers.drop_nested([:a, 0, :c])
       %{a: [%{b: 123}, "hey"]}
-      iex> %{a: [%{b: 123, c: [:thing]}, "hey"]} |> Alfred.Helpers.drop_nested([:a, 0, :c])
+      iex> %{a: [%{b: 123, c: [:thing]}, "hey"]} |> Bottler.Helpers.drop_nested([:a, 0, :c])
       %{a: [%{b: 123}, "hey"]}
-      iex> %{a: [%{b: 123, c: [:thing]}, "hey"]} |> Alfred.Helpers.drop_nested([:a])
+      iex> %{a: [%{b: 123, c: [:thing]}, "hey"]} |> Bottler.Helpers.drop_nested([:a])
       %{}
 
-      iex> %{a: [[b: 123], "hey"]} |> Alfred.Helpers.drop_nested([:a, 0, :c])
+      iex> %{a: [[b: 123], "hey"]} |> Bottler.Helpers.drop_nested([:a, 0, :c])
       %{a: [[b: 123], "hey"]}
-      iex> %{a: [[b: 123, c: [:thing]], "hey"]} |> Alfred.Helpers.drop_nested([:a, 0, :c])
+      iex> %{a: [[b: 123, c: [:thing]], "hey"]} |> Bottler.Helpers.drop_nested([:a, 0, :c])
       %{a: [[b: 123], "hey"]}
 
   """
@@ -615,19 +615,19 @@ defmodule Bottler.Helpers do
   Version of `Map.has_key?/2` that can also be used for `List` and `Keyword`.
   Useful when you must work with a combination of `Map`, `Keyword` and `List`
 
-      iex> %{a: 1, b: 2} |> Alfred.Helpers.has_key?(:a)
+      iex> %{a: 1, b: 2} |> Bottler.Helpers.has_key?(:a)
       true
-      iex> %{a: 1, b: 2} |> Alfred.Helpers.has_key?(:c)
+      iex> %{a: 1, b: 2} |> Bottler.Helpers.has_key?(:c)
       false
 
-      iex> [a: 1, b: 2] |> Alfred.Helpers.has_key?(:a)
+      iex> [a: 1, b: 2] |> Bottler.Helpers.has_key?(:a)
       true
-      iex> [a: 1, b: 2] |> Alfred.Helpers.has_key?(:c)
+      iex> [a: 1, b: 2] |> Bottler.Helpers.has_key?(:c)
       false
 
-      iex> [:a, :b] |> Alfred.Helpers.has_key?(1)
+      iex> [:a, :b] |> Bottler.Helpers.has_key?(1)
       true
-      iex> [:a, :b] |> Alfred.Helpers.has_key?(2)
+      iex> [:a, :b] |> Bottler.Helpers.has_key?(2)
       false
 
   """
@@ -648,14 +648,14 @@ defmodule Bottler.Helpers do
   `{:error, reason}` is returned if there is anything other than a List on given
   coordinates, or anything else fails.
 
-      iex> %{a: [%{b: 123}, "hey"]} |> Alfred.Helpers.push_nested([:a, 0, :c], :thing)
+      iex> %{a: [%{b: 123}, "hey"]} |> Bottler.Helpers.push_nested([:a, 0, :c], :thing)
       %{a: [%{b: 123, c: [:thing]}, "hey"]}
-      iex> %{a: [%{b: 123}, "hey"]} |> Alfred.Helpers.push_nested([:a], :thing)
+      iex> %{a: [%{b: 123}, "hey"]} |> Bottler.Helpers.push_nested([:a], :thing)
       %{a: [%{b: 123}, "hey", :thing]}
-      iex> %{a: %{b: 123}} |> Alfred.Helpers.push_nested([:a], :thing)
+      iex> %{a: %{b: 123}} |> Bottler.Helpers.push_nested([:a], :thing)
       {:error, :not_a_list}
 
-      iex> [a: [[b: 123], "hey"]] |> Alfred.Helpers.push_nested([:a, 0, :c], :thing)
+      iex> [a: [[b: 123], "hey"]] |> Bottler.Helpers.push_nested([:a, 0, :c], :thing)
       [a: [[c: [:thing], b: 123], "hey"]]
 
   """
@@ -712,7 +712,7 @@ defmodule Bottler.Helpers do
   @doc """
   Fills given list with nils until it is of the given length
 
-    iex> require Alfred.Helpers, as: H
+    iex> require Bottler.Helpers, as: H
     iex> H.grow_list([], 3)
     [nil, nil, nil]
     iex> H.grow_list([1, 2], 3)
