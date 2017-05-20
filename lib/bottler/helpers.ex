@@ -528,6 +528,8 @@ defmodule Bottler.Helpers do
   end
   def put_nested([], [key], value) when is_atom(key),
     do: Keyword.put([], key, value)
+  def put_nested([], [key | rest], value) when is_atom(key),
+    do: [{key, put_nested([], rest, value)}]
   def put_nested([{_key, _value} | _rest] = data, [key], value) when is_atom(key) do
     {_, v} = Keyword.get_and_update(data, key, &({&1, value}))
     v

@@ -31,6 +31,6 @@ defmodule Bottler.Mixfile do
   end
 
   defp aliases do
-    [test: ["test --cover", "credo"]]
+    [test: ["credo", "test --cover"]]
   end
 end

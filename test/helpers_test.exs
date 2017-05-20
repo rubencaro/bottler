@@ -48,9 +48,19 @@ defmodule Bottler.HelpersTest do
     assert %A{a: [1, 2, [3, 4]], c: %{abc: 123, cde: 234}} == H.put_nested o, [:c, :cde], 234
     assert %A{a: [1, 2, [3, 4]], c: %{abc: [5, 6]}} == H.put_nested o, [:c, :abc], [5, 6]
 
-    # tricky edge case!
-    o = %{}
+    # creating Keywords when atoms are given and no previous container exist
+    o = %{a: %{b: %{}}}
     assert %{a: %{b: %{c: 1}}} == H.put_nested o, [:a, :b, :c], 1
+    o = %{a: %{}}
+    assert %{a: %{b: [c: 1]}} == H.put_nested o, [:a, :b, :c], 1
+    o = %{}
+    assert %{a: [b: [c: 1]]} == H.put_nested o, [:a, :b, :c], 1
+
+    # creating lists when integers are given and no previous container exist
+    o = %{a: %{}}
+    assert %{a: %{b: [nil, 1]}} == H.put_nested o, [:a, :b, 1], 1
+    o = %{}
+    assert %{a: [nil, nil, [nil, 1]]} == H.put_nested o, [:a, 2, 1], 1
   end
 
   test "merge_nested" do
