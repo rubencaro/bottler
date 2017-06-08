@@ -732,4 +732,18 @@ defmodule Bottler.Helpers do
       false -> list
     end
   end
+
+  @doc """
+  Method applies a function against element if condition is true.
+  """
+  def run_if(elem, condition, fun) when is_function(condition) do
+    run_if(elem, condition.(), fun)
+  end
+  def run_if(elem, condition, fun) do
+    if condition do
+      fun.(elem)
+    else
+      elem
+    end
+  end
 end

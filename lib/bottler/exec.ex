@@ -20,6 +20,7 @@ defmodule Bottler.Exec do
     config[:servers]
     |> H.prepare_servers
     |> Enum.map(fn(s) -> s ++ [user: config[:remote_user]] end) # add user
+    |> Enum.map(fn(s) -> s ++ [rsa_pass_phrase: config[:rsa_pass_phrase]] end) # add rsa_pass_phrase
     |> Enum.map(fn(s) -> s ++ [cmd: cmd, switches: switches] end) # add cmd and switches
     |> H.in_tasks(fn(args) -> on_server(args) end)
   end
@@ -30,20 +31,28 @@ defmodule Bottler.Exec do
 
     L.info "Executing '#{args[:cmd]}' on #{id}..."
 
-    {:ok, conn} = S.connect ip: args[:ip], user: args[:user]
+    {:ok, conn} = [
+        ip: args[:ip],
+        user: args[:user]
+      ]
+      |> H.run_if(args[:rsa_pass_phrase], &(&1 ++ [rsa_pass_phrase: args[:rsa_pass_phrase]]))
+      |> Enum.map(fn {k,v} -> {k, v |> to_charlist} end)
+      |> S.connect
 
     conn
     |> S.stream(args[:cmd], exec_timeout: args[:switches][:timeout])
-    |> Enum.each(fn(x) ->
-      case x do
-        {:stdout, row}    -> process_stdout(id, row)
-        {:stderr, row}    -> process_stderr(id, row)
-        {:status, status} -> process_exit_status(id, status)
-        {:error, reason}  -> process_error(id, reason)
-      end
-    end)
+    |> Enum.each(&process_exec_stream(&1, id))
 
     :ok
+  end
+
+  defp process_exec_stream(x, id) do
+    case x do
+      {:stdout, row}    -> process_stdout(id, row)
+      {:stderr, row}    -> process_stderr(id, row)
+      {:status, status} -> process_exit_status(id, status)
+      {:error, reason}  -> process_error(id, reason)
+    end
   end
 
   defp clean_args(args) do

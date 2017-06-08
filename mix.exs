@@ -13,8 +13,8 @@ defmodule Bottler.Mixfile do
   end
 
   def application do
-    [ applications: [:logger, :crypto],
-      included_applications: [:public_key, :asn1, :iex] ]
+    [applications: [:logger, :crypto],
+     included_applications: [:public_key, :asn1, :iex]]
   end
 
   defp package do
