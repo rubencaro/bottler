@@ -14,11 +14,13 @@ defmodule Bottler.Ship do
   """
   def ship(config) do
     ship_config = config[:ship] |> H.defaults(timeout: 60_000, method: :scp)
+    publish_config = config[:publish] |> H.defaults(timeout: 60_000, method: :scp)
     servers = config[:servers] |> H.prepare_servers
 
     case ship_config[:method] do
       :scp -> scp_shipment(config, servers, ship_config)
       :remote_scp -> remote_scp_shipment(config, servers, ship_config)
+      :remote_server -> remote_server_shipment(config, servers, ship_config, publish_config)
     end
   end
 
@@ -54,6 +56,36 @@ defmodule Bottler.Ship do
                                     srcpath: "/tmp/#{common[:app]}.tar.gz",
                                     method: :remote_scp)
     rest |> H.in_tasks( &(&1 |> K.merge(common_rest) |> run_scp), task_opts)
+  end
+
+  defp remote_server_shipment(config, servers, ship_config, publish_config) do
+    L.info "Shipping to #{servers |> Enum.map(&(&1[:id])) |> Enum.join(",")} using download_latest_published.sh..."
+
+    task_opts = [expected: [], to_s: true, timeout: ship_config[:timeout]]
+
+    common = [remote_user: config[:remote_user],
+              app: Mix.Project.get!.project[:app],
+              publish_user: publish_config[:remote_user],
+              publish_host: publish_config[:server],
+              publish_folder: publish_config[:folder],]
+
+    servers |> H.in_tasks( &(&1 |> K.merge(common) |> invoke_download_latest_published), task_opts)
+  end
+
+  defp get_download_latest_published_template(args) do
+    ssh_opts = "-oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -oLogLevel=ERROR"
+    script_args = "-u <%= publish_user %> -h <%= publish_host %> -f <%= publish_folder %> -a <%= app %>"
+    ~s(ssh -A #{ssh_opts} <%= remote_user %>@<%= ip %> /home/<%= remote_user %>/<%= app %>/current/scripts/download_latest_published.sh #{script_args})
+  end
+
+  defp invoke_download_latest_published(args) do
+    L.info args |> get_download_latest_published_template |> EEx.eval_string(args)
+
+    args
+    |> get_download_latest_published_template
+    |> EEx.eval_string(args)
+    |> to_charlist
+    |> :os.cmd
   end
 
   defp get_scp_template(method) do
