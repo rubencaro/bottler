@@ -6,6 +6,7 @@ defmodule Bottler do
   """
 
   defdelegate release(config), to: Bottler.Release
+  defdelegate publish(config), to: Bottler.Publish
   defdelegate ship(config), to: Bottler.Ship
   defdelegate install(config), to: Bottler.Install
   defdelegate restart(config), to: Bottler.Restart
