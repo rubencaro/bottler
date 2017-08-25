@@ -12,23 +12,25 @@ defmodule Bottler.Publish do
   """
   def publish(config) do
     publish_config = config[:publish]
-    L.info "Publishing to #{publish_config[:server]}"
+    if publish_config do
+      L.info "Publishing to #{publish_config[:server]}"
 
-    project = Mix.Project.get!.project
+      project = Mix.Project.get!.project
 
-    result = {:ok, %{config: publish_config,
-                     src_release: ~s(#{project[:app]}.tar.gz),
-                     dst_release: ~s(#{project[:app]}-#{project[:version]}.tar.gz)}}
-      |> upload
-      |> mark_as_latest
+      result = {:ok, %{config: publish_config,
+                      src_release: ~s(#{project[:app]}.tar.gz),
+                      dst_release: ~s(#{project[:app]}-#{project[:version]}.tar.gz)}}
+        |> upload
+        |> mark_as_latest
 
-    case result do
-      {:ok, _} ->
-        :ok
+      case result do
+        {:ok, _} ->
+          :ok
 
-      {:error, reason, _} ->
-        Logger.error "Publish failed: #{reason}"
-        :error
+        {:error, reason, _} ->
+          Logger.error "Publish failed: #{reason}"
+          :error
+      end
     end
   end
 
