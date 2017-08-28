@@ -18,8 +18,8 @@ defmodule Bottler.Publish do
       project = Mix.Project.get!.project
 
       result = {:ok, %{config: publish_config,
-                      src_release: ~s(#{project[:app]}.tar.gz),
-                      dst_release: ~s(#{project[:app]}-#{project[:version]}.tar.gz)}}
+                       src_release: ~s(#{project[:app]}.tar.gz),
+                       dst_release: ~s(#{project[:app]}-#{project[:version]}.tar.gz)}}
         |> upload
         |> mark_as_latest
 
@@ -50,7 +50,7 @@ defmodule Bottler.Publish do
     scp_opts ++ ~w(#{src_release_file} #{config[:remote_user]}@#{config[:server]}:#{config[:folder]}/#{dst_release})
   end
 
-  defp mark_as_latest({:ok, %{config: config} = state}) do
+  defp mark_as_latest({:ok, state}) do
     result = System.cmd "ssh", mark_as_latest_args(state)
 
     case result do

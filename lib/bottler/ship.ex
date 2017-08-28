@@ -72,7 +72,7 @@ defmodule Bottler.Ship do
     servers |> H.in_tasks( &(&1 |> K.merge(common) |> invoke_download_latest_published), task_opts)
   end
 
-  defp get_download_latest_published_template(args) do
+  defp get_download_latest_published_template do
     ssh_opts = "-oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -oLogLevel=ERROR"
     script_args = "-u <%= publish_user %> -h <%= publish_host %> -f <%= publish_folder %> -a <%= app %>"
     ~s(ssh -A #{ssh_opts} <%= remote_user %>@<%= ip %> /home/<%= remote_user %>/<%= app %>/current/scripts/download_latest_published.sh #{script_args})
@@ -81,8 +81,7 @@ defmodule Bottler.Ship do
   defp invoke_download_latest_published(args) do
     L.info args |> get_download_latest_published_template |> EEx.eval_string(args)
 
-    args
-    |> get_download_latest_published_template
+    get_download_latest_published_template()
     |> EEx.eval_string(args)
     |> to_charlist
     |> :os.cmd
