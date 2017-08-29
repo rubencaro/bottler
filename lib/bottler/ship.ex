@@ -14,11 +14,13 @@ defmodule Bottler.Ship do
   """
   def ship(config) do
     ship_config = config[:ship] |> H.defaults(timeout: 60_000, method: :scp)
+    publish_config = config[:publish] |> H.defaults(timeout: 60_000, method: :scp)
     servers = config[:servers] |> H.prepare_servers
 
     case ship_config[:method] do
       :scp -> scp_shipment(config, servers, ship_config)
       :remote_scp -> remote_scp_shipment(config, servers, ship_config)
+      :release_script -> release_script_shipment(config, servers, ship_config, publish_config)
     end
   end
 
@@ -54,6 +56,39 @@ defmodule Bottler.Ship do
                                     srcpath: "/tmp/#{common[:app]}.tar.gz",
                                     method: :remote_scp)
     rest |> H.in_tasks( &(&1 |> K.merge(common_rest) |> run_scp), task_opts)
+  end
+
+  defp release_script_shipment(config, servers, ship_config, publish_config) do
+    L.info "Shipping to #{servers |> Enum.map(&(&1[:id])) |> Enum.join(",")} using release_script.."
+
+    task_opts = [timeout: ship_config[:timeout]]
+
+    common = [remote_user: config[:remote_user],
+              app: Mix.Project.get!.project[:app],
+              publish_user: publish_config[:remote_user],
+              publish_host: publish_config[:server],
+              publish_folder: publish_config[:folder],
+              release_ship_script: ship_config[:release_ship_script]]
+
+    servers |> H.in_tasks( &(&1 |> K.merge(common) |> invoke_download_latest_release), task_opts)
+  end
+
+  defp get_release_script_args(args) do
+    ssh_opts = ["-oStrictHostKeyChecking=no", "-oUserKnownHostsFile=/dev/null", "-oLogLevel=ERROR"]
+    ["-A"] ++ ssh_opts ++ ["#{args[:remote_user]}@#{args[:ip]}", args[:release_download_script]]
+  end
+
+  defp invoke_download_latest_release(args) do
+    release_script_args = get_release_script_args(args)
+
+    L.info "Invoking release_script on #{args[:ip]}..."
+
+    result = System.cmd "ssh", release_script_args
+
+    case result do
+      {_, 0} -> :ok
+      {_error, _} -> :error
+    end
   end
 
   defp get_scp_template(method) do

@@ -23,6 +23,7 @@ defmodule Mix.Tasks.Deploy do
       |> H.validate_branch
       |> H.inline_resolve_servers(switches)
     :ok = B.release c
+    :ok = B.publish c
     {:ok, _} = B.ship c
     {:ok, _} = B.install c
     {:ok, _} = B.restart c
