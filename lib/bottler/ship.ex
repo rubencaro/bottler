@@ -20,7 +20,7 @@ defmodule Bottler.Ship do
     case ship_config[:method] do
       :scp -> scp_shipment(config, servers, ship_config)
       :remote_scp -> remote_scp_shipment(config, servers, ship_config)
-      :remote_server -> remote_server_shipment(config, servers, ship_config, publish_config)
+      :release_script -> release_script_shipment(config, servers, ship_config, publish_config)
     end
   end
 
@@ -58,33 +58,37 @@ defmodule Bottler.Ship do
     rest |> H.in_tasks( &(&1 |> K.merge(common_rest) |> run_scp), task_opts)
   end
 
-  defp remote_server_shipment(config, servers, ship_config, publish_config) do
-    L.info "Shipping to #{servers |> Enum.map(&(&1[:id])) |> Enum.join(",")} using download_latest_published.sh..."
+  defp release_script_shipment(config, servers, ship_config, publish_config) do
+    L.info "Shipping to #{servers |> Enum.map(&(&1[:id])) |> Enum.join(",")} using release_script.."
 
-    task_opts = [expected: [], to_s: true, timeout: ship_config[:timeout]]
+    task_opts = [timeout: ship_config[:timeout]]
 
     common = [remote_user: config[:remote_user],
               app: Mix.Project.get!.project[:app],
               publish_user: publish_config[:remote_user],
               publish_host: publish_config[:server],
-              publish_folder: publish_config[:folder],]
+              publish_folder: publish_config[:folder],
+              release_ship_script: ship_config[:release_ship_script]]
 
-    servers |> H.in_tasks( &(&1 |> K.merge(common) |> invoke_download_latest_published), task_opts)
+    servers |> H.in_tasks( &(&1 |> K.merge(common) |> invoke_download_latest_release), task_opts)
   end
 
-  defp get_download_latest_published_template do
-    ssh_opts = "-oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -oLogLevel=ERROR"
-    script_args = "-u <%= publish_user %> -h <%= publish_host %> -f <%= publish_folder %> -a <%= app %>"
-    ~s(ssh -A #{ssh_opts} <%= remote_user %>@<%= ip %> /home/<%= remote_user %>/<%= app %>/current/scripts/download_latest_published.sh #{script_args})
+  defp get_release_script_args(args) do
+    ssh_opts = ["-oStrictHostKeyChecking=no", "-oUserKnownHostsFile=/dev/null", "-oLogLevel=ERROR"]
+    ["-A"] ++ ssh_opts ++ ["#{args[:remote_user]}@#{args[:ip]}", args[:release_download_script]]
   end
 
-  defp invoke_download_latest_published(args) do
-    L.info args |> get_download_latest_published_template |> EEx.eval_string(args)
+  defp invoke_download_latest_release(args) do
+    release_script_args = get_release_script_args(args)
 
-    get_download_latest_published_template()
-    |> EEx.eval_string(args)
-    |> to_charlist
-    |> :os.cmd
+    L.info "Invoking release_script on #{args[:ip]}..."
+
+    result = System.cmd "ssh", release_script_args
+
+    case result do
+      {_, 0} -> :ok
+      {_error, _} -> :error
+    end
   end
 
   defp get_scp_template(method) do
