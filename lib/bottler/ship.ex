@@ -75,7 +75,7 @@ defmodule Bottler.Ship do
 
   defp get_release_script_args(args) do
     ssh_opts = ["-oStrictHostKeyChecking=no", "-oUserKnownHostsFile=/dev/null", "-oLogLevel=ERROR"]
-    ["-A"] ++ ssh_opts ++ ["#{args[:remote_user]}@#{args[:ip]}", args[:release_download_script]]
+    ["-A"] ++ ssh_opts ++ ["#{args[:remote_user]}@#{args[:ip]}", args[:release_ship_script]]
   end
 
   defp invoke_download_latest_release(args) do
