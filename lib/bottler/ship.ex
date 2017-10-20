@@ -13,14 +13,15 @@ defmodule Bottler.Ship do
     Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
   """
   def ship(config) do
-    ship_config = config[:ship] |> H.defaults(timeout: 60_000, method: :scp)
-    publish_config = config[:publish] |> H.defaults(timeout: 60_000, method: :scp)
+    ship_config = config[:ship] |> H.defaults(timeout: 60_000, method: :scp)    
     servers = config[:servers] |> H.prepare_servers
 
     case ship_config[:method] do
       :scp -> scp_shipment(config, servers, ship_config)
       :remote_scp -> remote_scp_shipment(config, servers, ship_config)
-      :release_script -> release_script_shipment(config, servers, ship_config, publish_config)
+      :release_script -> 
+        publish_config = config[:publish] |> H.defaults(timeout: 60_000, method: :scp)
+        release_script_shipment(config, servers, ship_config, publish_config)
     end
   end
 
