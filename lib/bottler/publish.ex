@@ -31,6 +31,8 @@ defmodule Bottler.Publish do
           Logger.error "Publish failed: #{reason}"
           :error
       end
+    else
+      :ok
     end
   end
 
