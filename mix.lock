@@ -1,2 +1,2 @@
-%{"poison": {:hex, :poison, "2.2.0", "4763b69a8a77bd77d26f477d196428b741261a761257ff1cf92753a0d4d24a63", [:mix], []},
-  "sshex": {:hex, :sshex, "2.1.2", "f37167cbef6b33c31754750c30ac281fc7b7f6480f437c7c29708db7ef6ae85f", [:mix], []}}
+%{"poison": {:hex, :poison, "3.1.0", "d9eb636610e096f86f25d9a46f35a9facac35609a7591b3be3326e99a0484665", [:mix], [], "hexpm"},
+  "sshex": {:hex, :sshex, "2.1.2", "f37167cbef6b33c31754750c30ac281fc7b7f6480f437c7c29708db7ef6ae85f", [:mix], [], "hexpm"}}
