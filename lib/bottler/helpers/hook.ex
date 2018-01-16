@@ -23,7 +23,7 @@ defmodule Bottler.Helpers.Hook do
     |> prepare_return(continue_on_fail)
   end
 
-  defp prepare_return(_, true), do: :ok
+  defp prepare_return(_command_result, true), do: :ok
   defp prepare_return(command_result, false), do: command_result
 
 end
