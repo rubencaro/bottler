@@ -1,4 +1,5 @@
 require Bottler.Helpers, as: H
+require Bottler.Helpers.Hook, as: Hook
 alias Bottler, as: B
 
 defmodule Mix.Tasks.Bottler.Release do
@@ -18,6 +19,7 @@ defmodule Mix.Tasks.Bottler.Release do
       |> H.validate_branch
       |> H.inline_resolve_servers
 
+    :ok = Hook.exec :pre_release, c
     :ok = B.release c
     :ok
   end
