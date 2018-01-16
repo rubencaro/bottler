@@ -1,3 +1,4 @@
+require Logger, as: L
 require Bottler.Helpers, as: H
 
 defmodule Bottler.Helpers.Hook do
@@ -16,6 +17,7 @@ defmodule Bottler.Helpers.Hook do
   end
 
   defp launch(command, continue_on_fail) do
+    L.info "Launching hook: " <> command <> " ..."
     command
     |> H.cmd
     |> prepare_return(continue_on_fail)
