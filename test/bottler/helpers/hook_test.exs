@@ -19,7 +19,7 @@ defmodule HelpersHookTest do
 
   @tag :hook_continue_on_fail_true
   test "allways returns :ok if continue_on_fail is true", config do
-    assert :ok == Hook.exec(:pre_release, config)
+    assert :ok = Hook.exec(:pre_release, config)
     config = %{config| hooks: [pre_release: %{continue_on_fail: true, command: "unexistent_command"}]}
     assert :ok == Hook.exec(:pre_release, config)
   end
