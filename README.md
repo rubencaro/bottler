@@ -67,7 +67,8 @@ On your config:
                                       method: :scp],
                                green_flag: [timeout: 30_000],
                                goto: [terminal: "terminator -T '<%= title %>' -e '<%= command %>'"]
-                               forced_branch: "master" ]
+                               forced_branch: "master",
+                               hooks: [pre_release: %{command: "whatever", continue_on_fail: false}]]
 ```
 
 * `servers` - list of servers to deploy on.
@@ -85,6 +86,7 @@ On your config:
 * `goto` - options for the `goto` task
   * `terminal` - template for the actual terminal command
 * `forced_branch` - only allow executing _dangerous_ tasks when local git is on given branch
+* `hooks` - hooks to run external commands on interesting moments
 
 Then you can use the tasks like `mix bottler.release`. Take a look at the docs for each task with `mix help <task>`.
 
@@ -226,6 +228,19 @@ When you perform an operation on a server, its ip will be obtained using `gcloud
 
 Optionally you can give a `match` regex string to default filter server names given by gcloud. Just the same you would give to the `--servers` switch of the tasks. This filter will be added to the one given at the commandline switch. I.e. if you configure `match` and then pass `--servers`, then only servers with a name that matches both regexes will pass.
 
+## Hooks
+
+You can configure hooks to be run at several points of the process. To define a hook you must add it to your configuration like this:
+
+```elixir
+hooks: [hook_point_name: %{command: "whatever", continue_on_fail: false}],
+```
+
+`continue_on_fail` marks the behaviour of bottler when the return code of given command is != 0
+
+Supported hook points are:
+* __pre-release__: executed right before the _release_ task
+
 ## TODOs
 
 * Use [distillery](https://github.com/bitwalker/distillery)
@@ -234,15 +249,14 @@ Optionally you can give a `match` regex string to default filter server names gi
 * Get it stable on production
 * Complete README
 * Rollback to _any_ previous version
-* Optionally include `erts` (now we can ship openssl too see [here](http://www.erlang.org/download/otp_src_17.4.readme))
-* Allow hot code swap (just follow [this](http://erlang.org/doc/design_principles/release_handling.html) to prepare the release, and then provide an example of [Harakiri](http://github.com/rubencaro/harakiri) action that actually performs the upgrade)
-* Support for hooks
 * Add support for deploy to AWS instances [*](https://github.com/gleber/erlcloud)[*](notes/aws.md)
 
 ## Changelog
 
 ### master
 
+* Add pre-release hook
+* Support for hooks
 * Remove 1.4 warnings
 * Configurable `max_processes`
 * Log using server names
