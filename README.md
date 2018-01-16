@@ -236,10 +236,10 @@ You can configure hooks to be run at several points of the process. To define a 
 hooks: [hook_point_name: %{command: "whatever", continue_on_fail: false}],
 ```
 
-`continue_on_fail` marks the behaviour of bottler when the return code of given command is != 0
+`continue_on_fail` marks the behaviour of bottler when the return code of given command is not zero. When `continue_on_fail` is `true`, bottler will continue with the normal execution. Otherwise it will halt.
 
 Supported hook points are:
-* __pre-release__: executed right before the _release_ task
+* __pre_release__: executed right before the _release_ task
 
 ## TODOs
 
