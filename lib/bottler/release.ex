@@ -1,5 +1,6 @@
 require Logger, as: L
 require Bottler.Helpers, as: H
+require Bottler.Helpers.Hook, as: Hook
 
 defmodule Bottler.Release do
 
@@ -10,6 +11,9 @@ defmodule Bottler.Release do
     Build a release tar.gz. Returns `:ok` when done. Crash otherwise.
   """
   def release(config) do
+
+    :ok = Hook.exec :pre_release, config
+
     L.info "Compiling deps for release..."
     env = System.get_env "MIX_ENV"
     :ok = H.cmd "MIX_ENV=#{env} mix deps.get"
