@@ -18,13 +18,49 @@ defmodule Bottler.Install do
   """
   def install(config) do
     :ssh.start # sometimes it's not already started at this point...
+
     config[:servers]
     |> H.prepare_servers
-    |> Enum.map(fn(s) -> s ++ [ user: config[:remote_user], additional_folders: config[:additional_folders] ] end) # add user, additional folders
-    |> H.in_tasks( fn(args) -> on_server(args) end )
+    |> Enum.map(fn(s) ->
+      s
+      |> Keyword.put(:user, config[:remote_user])
+      |> Keyword.put(:additional_folders, config[:additional_folders])
+      |> Keyword.merge(config[:install] || [])
+    end)
+    |> H.in_tasks(fn(args) ->
+      on_server(args)
+    end)
   end
 
   defp on_server(args) do
+    case args[:server_script] do
+      script when is_binary(script) ->
+        script_install(args)
+
+      nil ->
+        manual_install(args)
+    end
+  end
+
+  defp script_install(args) do
+    L.info "Invoking install_script (#{args[:server_script]}) on #{args[:ip]}..."
+
+    install_script_args = get_install_script_args(args)
+
+    result = System.cmd "ssh", install_script_args
+
+    case result do
+      {_, 0} -> :ok
+      {_error, _} -> :error
+    end
+  end
+
+  defp get_install_script_args(args) do
+    ssh_opts = ["-oStrictHostKeyChecking=no", "-oUserKnownHostsFile=/dev/null", "-oLogLevel=ERROR"]
+    ["-A"] ++ ssh_opts ++ ["#{args[:user]}@#{args[:ip]}", args[:server_script]]
+  end
+
+  defp manual_install(args) do
     ip = args[:ip] |> to_charlist
     user = args[:user] |> to_charlist
 
@@ -36,6 +72,7 @@ defmodule Bottler.Install do
     |> place_files
     |> make_current
     |> cleanup_old_releases
+
     :ok
   end
 
