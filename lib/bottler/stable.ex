@@ -13,6 +13,7 @@ defmodule Bottler.Stable do
   def stable(config) do
     H.spit "::::::::::::::::::::::::::::::::::::::: entra en stable :::::::::::::::::::::::::::::::::::::::"
     stable_config = config[:stable]
+    H.spit "::::::::::::::::::::::::::::::::::::::: #{inspect config[:stable]} :::::::::::::::::::::::::::::::::::::::"
     if stable_config do
       L.info "Publishing stable to #{stable_config[:server]}"
 
