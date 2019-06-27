@@ -11,9 +11,9 @@ defmodule Bottler.Stable do
     Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
   """
   def stable(config) do
-    H.spit "::::::::::::::::::::::::::::::::::::::: entra en stable :::::::::::::::::::::::::::::::::::::::"
+    
     publish_config = config[:publish]
-    H.spit "::::::::::::::::::::::::::::::::::::::: #{inspect config[:publish]} :::::::::::::::::::::::::::::::::::::::"
+    
     if publish_config do
       L.info "Publishing stable to #{publish_config[:server]}"
 
@@ -22,15 +22,15 @@ defmodule Bottler.Stable do
       result = {:ok, %{config: publish_config,
                        src_release: ~s(#{project[:app]}.tar.gz),
                        dst_release: ~s(#{project[:app]}-#{project[:version]}.tar.gz)}}
-        |> upload
-        |> mark_as_stable
+        |> upload()
+        |> mark_as_stable()
 
       case result do
         {:ok, _} ->
           :ok
 
         {:error, reason, _} ->
-          Logger.error "Stable failed: #{reason}"
+          Logger.error "Publish stable failed: #{reason}"
           :error
       end
     else
