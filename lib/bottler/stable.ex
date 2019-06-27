@@ -1,5 +1,5 @@
 require Logger, as: L
-require Bottler.Helpers, as: H
+# require Bottler.Helpers, as: H
 
 defmodule Bottler.Stable do
   @moduledoc """
