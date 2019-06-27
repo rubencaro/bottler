@@ -1,34 +1,36 @@
 require Logger, as: L
-#require Bottler.Helpers, as: H
+# require Bottler.Helpers, as: H
 
-defmodule Bottler.Publish do
+defmodule Bottler.Stable do
   @moduledoc """
-    Code to place a release file on a remote publish server.
+    Code to place a release file on a remote stable server.
   """
 
   @doc """
-    Copy local release file to remote publish
+    Copy local release file to remote stable
     Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
   """
-  def publish(config) do
+  def stable(config) do
+    
     publish_config = config[:publish]
+    
     if publish_config do
-      L.info "Publishing latest to #{publish_config[:server]}"
+      L.info "Publishing stable to #{publish_config[:server]}"
 
       project = Mix.Project.get!.project
 
       result = {:ok, %{config: publish_config,
                        src_release: ~s(#{project[:app]}.tar.gz),
                        dst_release: ~s(#{project[:app]}-#{project[:version]}.tar.gz)}}
-        |> upload
-        |> mark_as_latest
+        |> upload()
+        |> mark_as_stable()
 
       case result do
         {:ok, _} ->
           :ok
 
         {:error, reason, _} ->
-          Logger.error "Publish failed: #{reason}"
+          Logger.error "Publish stable failed: #{reason}"
           :error
       end
     else
@@ -52,18 +54,18 @@ defmodule Bottler.Publish do
     scp_opts ++ ~w(#{src_release_file} #{config[:remote_user]}@#{config[:server]}:#{config[:folder]}/#{dst_release})
   end
 
-  defp mark_as_latest({:ok, state}) do
-    result = System.cmd "ssh", mark_as_latest_args(state)
+  defp mark_as_stable({:ok, state}) do
+    result = System.cmd "ssh", mark_as_stable_args(state)
 
     case result do
       {_, 0} -> {:ok, state}
       {error, _} -> {:error, error, state}
     end
   end
-  defp mark_as_latest(x), do: x
+  defp mark_as_stable(x), do: x
 
-  defp mark_as_latest_args(%{config: config, dst_release: dst_release}) do
-    remote_cmd = ~s(ln -sf #{config[:folder]}/#{dst_release} #{config[:folder]}/latest)
+  defp mark_as_stable_args(%{config: config, dst_release: dst_release}) do
+    remote_cmd = ~s(ln -sf #{config[:folder]}/#{dst_release} #{config[:folder]}/stable)
     ~w(#{config[:remote_user]}@#{config[:server]} #{remote_cmd})
   end
 end
