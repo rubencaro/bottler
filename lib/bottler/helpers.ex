@@ -198,7 +198,6 @@ defmodule Bottler.Helpers do
   end
 
   def validate_branch(config) do
-    L.error "#{inspect config}"
     case check_active_branch(config[:forced_branch]) do
       true -> config
       false -> L.error "You are not in branch '#{config[:forced_branch]}'."
