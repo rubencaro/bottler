@@ -1,5 +1,5 @@
 require Logger, as: L
-#require Bottler.Helpers, as: H
+require Bottler.Helpers, as: H
 
 defmodule Bottler.Stable do
   @moduledoc """
@@ -11,6 +11,7 @@ defmodule Bottler.Stable do
     Returns `{:ok, details}` when done, `{:error, details}` if anything fails.
   """
   def stable(config) do
+    H.spit "::::::::::::::::::::::::::::::::::::::: entra en stable :::::::::::::::::::::::::::::::::::::::"
     stable_config = config[:stable]
     if stable_config do
       L.info "Publishing stable to #{stable_config[:server]}"
@@ -63,6 +64,7 @@ defmodule Bottler.Stable do
   defp mark_as_stable(x), do: x
 
   defp mark_as_stable_args(%{config: config, dst_release: dst_release}) do
+    H.spit "mark_as_stable_args #{config}"
     remote_cmd = ~s(ln -sf #{config[:folder]}/#{dst_release} #{config[:folder]}/stable)
     ~w(#{config[:remote_user]}@#{config[:server]} #{remote_cmd})
   end
