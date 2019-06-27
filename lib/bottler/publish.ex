@@ -13,7 +13,7 @@ defmodule Bottler.Publish do
   def publish(config) do
     publish_config = config[:publish]
     if publish_config do
-      L.info "Publishing to #{publish_config[:server]}"
+      L.info "Publishing latest to #{publish_config[:server]}"
 
       project = Mix.Project.get!.project
 
