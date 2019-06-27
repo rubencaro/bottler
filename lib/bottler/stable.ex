@@ -65,7 +65,6 @@ defmodule Bottler.Stable do
   defp mark_as_stable(x), do: x
 
   defp mark_as_stable_args(%{config: config, dst_release: dst_release}) do
-    H.spit "mark_as_stable_args #{config}"
     remote_cmd = ~s(ln -sf #{config[:folder]}/#{dst_release} #{config[:folder]}/stable)
     ~w(#{config[:remote_user]}@#{config[:server]} #{remote_cmd})
   end
