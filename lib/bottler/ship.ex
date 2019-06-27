@@ -14,7 +14,7 @@ defmodule Bottler.Ship do
   """
   def ship(config) do
     ship_config = config[:ship] |> H.defaults(timeout: 60_000, method: :scp)
-    publish_config = config[:publish] || config[:stable] || [] |> H.defaults(timeout: 60_000, method: :scp)
+    publish_config = config[:stable] || [] |> H.defaults(timeout: 60_000, method: :scp)
     servers = config[:servers] |> H.prepare_servers
 
     case ship_config[:method] do
