@@ -4,6 +4,15 @@
 [![Hex Version](http://img.shields.io/hexpm/v/bottler.svg?style=flat)](https://hex.pm/packages/bottler)
 [![Hex Version](http://img.shields.io/hexpm/dt/bottler.svg?style=flat)](https://hex.pm/packages/bottler)
 
+----
+
+# Abandoned !
+This project has not been used by me in production for months and I don't expect to be able to dedicate time to it for a while. It was never meant to be more than my own tools, just in the open. So no big deal.
+
+As always, feel free to fork it and go on with it if you find it useful for you!
+
+----
+
 Bottler is a collection of tools that aims to help you generate releases, ship
 them to your servers, install them there, and get them live on production.
 
